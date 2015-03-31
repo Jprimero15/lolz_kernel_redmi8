@@ -212,9 +212,15 @@ extern bool initcall_debug;
   #define ___define_initcall(fn, id, __sec) \
 	__lto_initcall(__COUNTER__, __LINE__, fn, id, __sec)
 #else
+#ifdef CONFIG_LTO_GCC
   #define ___define_initcall(fn, id, __sec) \
-	static initcall_t __initcall_##fn##id __used \
+	static initcall_t __initcall_##fn##id __used  __noreorder \
 		__attribute__((__section__(#__sec ".init"))) = fn;
+#else
+  #define ___define_initcall(fn, id, __sec) \
+        static initcall_t __initcall_##fn##id __used \
+                __attribute__((__section__(#__sec ".init"))) = fn;
+#endif
 #endif
 #endif
 
