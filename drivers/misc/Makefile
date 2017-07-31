@@ -61,6 +61,8 @@ obj-$(CONFIG_FPR_FPC) 	+= fpr_FingerprintCard/
 obj-$(CONFIG_FINGERPRINT_GOODIX_GF3208)     += goodix/
 obj-$(CONFIG_MEMORY_STATE_TIME)	+= memory_state_time.o
 
+obj-$(CONFIG_FORCE_FAST_CHARGE) += fastchg.o
+
 obj-$(CONFIG_UID_SYS_STATS)	+= uid_sys_stats.o
 obj-$(CONFIG_MEMORY_STATE_TIME)	+= memory_state_time.o
 obj-$(CONFIG_QCOM_XR_SMRTVWR_MISC) += qcom-xr-smrtvwr-misc.o
