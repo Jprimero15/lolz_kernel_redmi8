@@ -17,6 +17,7 @@
 #include <linux/bug.h>
 #include <asm/sections.h>
 #include <linux/cpu.h>
+#include <asm/sections.h>
 
 #ifdef HAVE_JUMP_LABEL
 
