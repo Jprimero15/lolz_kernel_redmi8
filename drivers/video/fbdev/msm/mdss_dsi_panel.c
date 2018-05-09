@@ -615,8 +615,8 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 				gpio_set_value((ctrl_pdata->rst_gpio),
 					pdata->panel_info.rst_seq[i]);
 				if (pdata->panel_info.rst_seq[++i])
-					usleep_range(pinfo->rst_seq[i] * 1000,
-						pinfo->rst_seq[i] * 1000);
+					usleep_range((pinfo->rst_seq[i] * 1000),
+						(pinfo->rst_seq[i] * 1000) + 10);
 			}
 
 #if IS_ENABLED(CONFIG_MACH_FAMILY_XIAOMI_OLIVE)
