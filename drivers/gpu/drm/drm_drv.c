@@ -515,6 +515,19 @@ int drm_dev_init(struct drm_device *dev,
 	mutex_init(&dev->ctxlist_mutex);
 	mutex_init(&dev->master_mutex);
 
+	kthread_init_worker(&dev->bridge_enable_worker);
+	dev->bridge_enable_task =
+			kthread_run_perf_critical(kthread_worker_fn,
+						  &dev->bridge_enable_worker,
+						  "drm_bridge_enable");
+	if (IS_ERR(dev->bridge_enable_task)) {
+		ret = PTR_ERR(dev->bridge_enable_task);
+		DRM_ERROR("Cannot create bridge_enable kthread: %d\n", ret);
+		goto err_free;
+	}
+	kthread_init_work(&dev->bridge_enable_work, drm_bridge_enable_work);
+	sched_setscheduler_nocheck(dev->bridge_enable_task, SCHED_FIFO, &param);
+
 	dev->anon_inode = drm_fs_inode_new();
 	if (IS_ERR(dev->anon_inode)) {
 		ret = PTR_ERR(dev->anon_inode);
