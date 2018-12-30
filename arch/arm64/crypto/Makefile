@@ -24,7 +24,7 @@ CFLAGS_aes-ce-cipher-core.o += -mcpu=cortex-a53+crypto -Wa,-mcpu=cortex-a53+cryp
 else
 CFLAGS_aes-ce-cipher-core.o += -march=armv8-a+crypto -Wa,-march=armv8-a+crypto
 endif
-CFLAGS_aes-ce-cipher-core.o += $(DISABLE_LTO)
+CFLAGS_aes-ce-cipher-core.o += $(DISABLE_LTO) $(call cc-option,-no-integrated-as)
 
 obj-$(CONFIG_CRYPTO_AES_ARM64_CE_CCM) += aes-ce-ccm.o
 aes-ce-ccm-y := aes-ce-ccm-glue.o aes-ce-ccm-core.o
