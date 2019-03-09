@@ -25,7 +25,7 @@
 	interrupt-parent = <&wakegic>;
 
 	chosen {
-		bootargs = "quiet kpti=0 rcu_nocbs=4-7";
+		bootargs = "quiet kpti=0 rcu_nocbs=4-7 noirqdebug";
 	};
 
 	firmware: firmware {
