@@ -73,7 +73,6 @@ struct boost_drv {
 	atomic_long_t max_boost_expires;
 	unsigned long state;
 	unsigned long last_input_jiffies;
-
 	bool stune_active;
 	int stune_slot;
 };
@@ -157,6 +156,14 @@ static void clear_stune_boost(struct boost_drv *b)
 	if (b->stune_active)
 		b->stune_active = reset_stune_boost("top-app", b->stune_slot);
 #endif
+}
+
+bool should_kick_frame_boost(unsigned long timeout_ms)
+{
+	struct boost_drv *b = &boost_drv_g;
+
+	return time_before(jiffies, b->last_input_jiffies +
+			   msecs_to_jiffies(timeout_ms));
 }
 
 static void __cpu_input_boost_kick(struct boost_drv *b)
@@ -408,6 +415,8 @@ static int __init cpu_input_boost_init(void)
 	struct boost_drv *b = &boost_drv_g;
 	struct task_struct *thread;
 	int ret;
+
+	b->last_input_jiffies = jiffies;
 
 	b->cpu_notif.notifier_call = cpu_notifier_cb;
 	b->cpu_notif.priority = INT_MAX - 2;
