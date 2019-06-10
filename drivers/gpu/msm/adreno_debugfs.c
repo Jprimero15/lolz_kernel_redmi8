@@ -1,3 +1,4 @@
+
 /* Copyright (c) 2002,2008-2018,2020, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -137,11 +138,13 @@ static void sync_event_print(struct seq_file *s,
 		break;
 	}
 	case KGSL_CMD_SYNCPOINT_TYPE_FENCE: {
+ #ifdef CONFIG_FENCE_DEBUG
 		int i;
 
 		for (i = 0; i < sync_event->info.num_fences; i++)
 			seq_printf(s, "sync: %s",
 				sync_event->info.fences[i].name);
+#endif
 		break;
 	}
 	default:
