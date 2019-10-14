@@ -7154,13 +7154,18 @@ static bool is_packing_eligible(struct task_struct *p, int target_cpu,
 }
 
 static int start_cpu(struct task_struct *p, bool boosted,
-		     struct cpumask *rtg_target)
+		     bool sync_boost, struct cpumask *rtg_target)
 {
 	struct root_domain *rd = cpu_rq(smp_processor_id())->rd;
 	int start_cpu = -1;
 
 	if (boosted)
 		return rd->max_cap_orig_cpu;
+
+	if (sync_boost) {
+		if (rd->max_cap_orig_cpu != -1)
+			return rd->max_cap_orig_cpu;
+	}
 
 	/* A task always fits on its rtg_target */
 	if (rtg_target) {
@@ -7204,7 +7209,7 @@ cpu_is_in_target_set(struct task_struct *p, int cpu)
 
 unsigned int sched_smp_overlap_capacity;
 static inline int find_best_target(struct task_struct *p, int *backup_cpu,
-				   bool boosted, bool prefer_idle,
+				   bool boosted, bool sync_boost, bool prefer_idle,
 				   struct find_best_target_env *fbt_env)
 {
 	unsigned long min_util = boosted_task_util(p);
@@ -7248,7 +7253,7 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 		target_capacity = 0;
 
 	/* Find start CPU based on boost value */
-	cpu = start_cpu(p, boosted, fbt_env->rtg_target);
+	cpu = start_cpu(p, boosted, sync_boost, fbt_env->rtg_target);
 	if (cpu < 0) {
 		schedstat_inc(p->se.statistics.nr_wakeups_fbt_no_cpu);
 		schedstat_inc(this_rq()->eas_stats.fbt_no_cpu);
@@ -7735,6 +7740,7 @@ static inline struct cpumask *find_rtg_target(struct task_struct *p)
 static int select_energy_cpu_brute(struct task_struct *p, int prev_cpu, int sync)
 {
 	bool boosted, prefer_idle;
+	int use_sync_boost = sched_feat(SYNC_BOOST);
 	struct sched_domain *sd;
 	int target_cpu;
 	int backup_cpu = -1;
@@ -7742,6 +7748,7 @@ static int select_energy_cpu_brute(struct task_struct *p, int prev_cpu, int sync
 	struct cpumask *rtg_target = find_rtg_target(p);
 	struct find_best_target_env fbt_env;
 	u64 start_t = 0;
+	bool sync_boost = false;
 
 	fbt_env.fastpath = 0;
 
@@ -7784,6 +7791,12 @@ static int select_energy_cpu_brute(struct task_struct *p, int prev_cpu, int sync
 		}
 	}
 
+	if (use_sync_boost) {
+		sync_boost = sync && cpu >= cpu_rq(cpu)->rd->max_cap_orig_cpu;
+	} else {
+		sync_boost = false;
+	}
+
 	sd = rcu_dereference(per_cpu(sd_ea, prev_cpu));
 	if (!sd) {
 		target_cpu = prev_cpu;
@@ -7793,8 +7806,8 @@ static int select_energy_cpu_brute(struct task_struct *p, int prev_cpu, int sync
 	sync_entity_load_avg(&p->se);
 
 	/* Find a cpu with sufficient capacity */
-	next_cpu = find_best_target(p, &backup_cpu, boosted, prefer_idle,
-				    &fbt_env);
+	next_cpu = find_best_target(p, &backup_cpu, boosted, sync_boost,
+				    prefer_idle, &fbt_env);
 	if (next_cpu == -1) {
 		target_cpu = prev_cpu;
 		goto out;
