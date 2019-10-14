@@ -7749,6 +7749,7 @@ static int select_energy_cpu_brute(struct task_struct *p, int cpu, int prev_cpu,
 	struct find_best_target_env fbt_env;
 	u64 start_t = 0;
 	bool sync_boost = false;
+	bool about_to_idle = (cpu_rq(cpu)->nr_running < 2);
 
 	fbt_env.fastpath = 0;
 
@@ -7779,7 +7780,7 @@ static int select_energy_cpu_brute(struct task_struct *p, int cpu, int prev_cpu,
 	if (prefer_idle || fbt_env.need_idle)
 		sync = 0;
 
-	if (sysctl_sched_sync_hint_enable && sync) {
+	if (sysctl_sched_sync_hint_enable && sync && about_to_idle) {
 		if (bias_to_waker_cpu(p, cpu, rtg_target)) {
 			schedstat_inc(p->se.statistics.nr_wakeups_secb_sync);
 			schedstat_inc(this_rq()->eas_stats.secb_sync);
