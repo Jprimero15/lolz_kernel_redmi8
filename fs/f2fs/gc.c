@@ -1595,8 +1595,10 @@ next_step:
 			int err;
 
 			inode = f2fs_iget(sb, dni.ino);
-			if (IS_ERR(inode))
+			if (IS_ERR(inode)) {
+				set_sbi_flag(sbi, SBI_NEED_FSCK);
 				continue;
+			}
 
 			if (is_bad_inode(inode) ||
 					special_file(inode->i_mode)) {
