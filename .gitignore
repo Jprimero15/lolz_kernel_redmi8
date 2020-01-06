@@ -52,6 +52,9 @@ Module.symvers
 /vmlinuz
 /System.map
 /Module.markers
+/olive_anykernel
+/release
+/out
 
 #
 # Debian directory (make deb-pkg)
