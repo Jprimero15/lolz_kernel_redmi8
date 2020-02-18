@@ -7774,7 +7774,6 @@ static int select_energy_cpu_brute(struct task_struct *p, int cpu, int prev_cpu,
 	struct cpumask *rtg_target = find_rtg_target(p);
 	struct find_best_target_env fbt_env;
 	u64 start_t = 0;
-	bool sync_boost = false;
 	bool about_to_idle = (cpu_rq(cpu)->nr_running < 2);
 	int start_cpu = get_start_cpu(p, rtg_target);
 
@@ -7822,7 +7821,8 @@ static int select_energy_cpu_brute(struct task_struct *p, int cpu, int prev_cpu,
 	}
 
 	if (use_sync_boost)
-		sync_boost = sync && cpu >= cpu_rq(cpu)->rd->max_cap_orig_cpu;
+		if (sync && cpu >= cpu_rq(cpu)->rd->max_cap_orig_cpu)
+			start_cpu = get_start_cpu(p, rtg_target);
 
 	sd = rcu_dereference(per_cpu(sd_ea, prev_cpu));
 	if (!sd) {
@@ -7833,7 +7833,7 @@ static int select_energy_cpu_brute(struct task_struct *p, int cpu, int prev_cpu,
 	sync_entity_load_avg(&p->se);
 
 	/* Find a cpu with sufficient capacity */
-	next_cpu = find_best_target(p, &backup_cpu, boosted || sync_boost,
+	next_cpu = find_best_target(p, &backup_cpu, boosted,
 				    prefer_idle, &fbt_env);
 	if (next_cpu == -1) {
 		target_cpu = prev_cpu;
