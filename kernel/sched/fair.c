@@ -70,8 +70,6 @@ walt_dec_cfs_rq_stats(struct cfs_rq *cfs_rq, struct task_struct *p) {}
 
 #endif
 
-static inline bool cpu_is_in_target_set(struct task_struct *p, int cpu);
-
 /*
  * Targeted preemption latency for CPU-bound tasks:
  * (default: 6ms * (1 + ilog(ncpus)), units: nanoseconds)
@@ -7170,6 +7168,7 @@ struct find_best_target_env {
 	bool need_idle;
 	int placement_boost;
 	int fastpath;
+	int start_cpu;
 };
 
 static bool is_packing_eligible(struct task_struct *p, int target_cpu,
@@ -7204,7 +7203,7 @@ static bool is_packing_eligible(struct task_struct *p, int target_cpu,
 	return (estimated_capacity <= capacity_curr_of(target_cpu));
 }
 
-static int start_cpu(struct task_struct *p, bool boosted, struct cpumask *rtg_target)
+static int get_start_cpu(struct task_struct *p, bool boosted, struct cpumask *rtg_target)
 {
 	struct root_domain *rd = cpu_rq(smp_processor_id())->rd;
 	int start_cpu = -1;
@@ -7237,21 +7236,6 @@ enum fastpaths {
 	PREV_CPU_FASTPATH,
 };
 
-/*
- * Check whether cpu is in the fastest set of cpu's that p should run on.
- * If p is boosted, prefer that p runs on a faster cpu; otherwise, allow p
- * to run on any cpu.
- */
-static inline bool
-cpu_is_in_target_set(struct task_struct *p, int cpu)
-{
-	struct root_domain *rd = cpu_rq(cpu)->rd;
-	int first_cpu = (schedtune_task_boost(p)) ?
-		rd->max_cap_orig_cpu : rd->min_cap_orig_cpu;
-	int next_usable_cpu = cpumask_next(first_cpu - 1, &p->cpus_allowed);
-	return cpu >= next_usable_cpu || next_usable_cpu >= nr_cpu_ids;
-}
-
 unsigned int sched_smp_overlap_capacity;
 static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 				   bool boosted, bool prefer_idle,
@@ -7271,7 +7255,7 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 	int best_active_cpu = -1;
 	int best_idle_cpu = -1;
 	int target_cpu = -1;
-	int cpu, i;
+	int start_cpu, i;
 	long spare_wake_cap, most_spare_wake_cap = 0;
 	int most_spare_cap_cpu = -1;
 	unsigned int active_cpus_count = 0;
@@ -7298,15 +7282,10 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 		target_capacity = 0;
 
 	/* Find start CPU based on boost value */
-	cpu = start_cpu(p, boosted, fbt_env->rtg_target);
-	if (cpu < 0) {
-		schedstat_inc(p->se.statistics.nr_wakeups_fbt_no_cpu);
-		schedstat_inc(this_rq()->eas_stats.fbt_no_cpu);
-		return -1;
-	}
+	start_cpu = fbt_env->start_cpu;
 
 	/* Find SD for the start CPU */
-	sd = rcu_dereference(per_cpu(sd_ea, cpu));
+	sd = rcu_dereference(per_cpu(sd_ea, start_cpu));
 	if (!sd) {
 		schedstat_inc(p->se.statistics.nr_wakeups_fbt_no_sd);
 		schedstat_inc(this_rq()->eas_stats.fbt_no_sd);
@@ -7314,7 +7293,7 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 	}
 
 	/* fast path for prev_cpu */
-	if ((capacity_orig_of(prev_cpu) == capacity_orig_of(cpu)) &&
+	if ((capacity_orig_of(prev_cpu) == capacity_orig_of(start_cpu)) &&
 		!cpu_isolated(prev_cpu) && cpu_online(prev_cpu) &&
 		idle_cpu(prev_cpu)) {
 
@@ -7498,7 +7477,7 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 			 * Skip processing placement further if we are visiting
 			 * cpus with lower capacity than start cpu
 			 */
-			if (capacity_orig < capacity_orig_of(cpu))
+			if (capacity_orig < capacity_orig_of(start_cpu))
 				continue;
 
 			/*
@@ -7735,14 +7714,14 @@ static inline int wake_to_idle(struct task_struct *p)
 }
 
 static inline bool
-bias_to_waker_cpu(struct task_struct *p, int cpu, struct cpumask *rtg_target)
+bias_to_waker_cpu(struct task_struct *p, int cpu, int start_cpu)
 {
 	bool base_test = cpumask_test_cpu(cpu, tsk_cpus_allowed(p)) &&
-			 cpu_active(cpu) && !cpu_isolated(cpu) &&
-			 task_fits_max(p, cpu) && cpu_is_in_target_set(p, cpu);
-	bool rtg_test = rtg_target && cpumask_test_cpu(cpu, rtg_target);
+			 cpu_active(cpu) && !cpu_isolated(cpu);
+	bool start_cap_test = (capacity_orig_of(cpu) >=
+					capacity_orig_of(start_cpu));
 
-	return base_test && (!rtg_target || rtg_test);
+	return base_test && start_cap_test;
 }
 
 #ifdef CONFIG_SCHED_WALT
@@ -7795,6 +7774,10 @@ static int select_energy_cpu_brute(struct task_struct *p, int cpu, int prev_cpu,
 	u64 start_t = 0;
 	bool sync_boost = false;
 	bool about_to_idle = (cpu_rq(cpu)->nr_running < 2);
+	int start_cpu = get_start_cpu(p, boosted, rtg_target);
+
+	if (start_cpu < 0)
+		return -1;
 
 	fbt_env.fastpath = 0;
 
@@ -7812,6 +7795,7 @@ static int select_energy_cpu_brute(struct task_struct *p, int cpu, int prev_cpu,
 	prefer_idle = 0;
 #endif
 
+	fbt_env.start_cpu = start_cpu;
 	fbt_env.rtg_target = rtg_target;
 	if (sched_feat(EAS_USE_NEED_IDLE) && prefer_idle) {
 		fbt_env.need_idle = true;
@@ -7826,7 +7810,7 @@ static int select_energy_cpu_brute(struct task_struct *p, int cpu, int prev_cpu,
 		sync = 0;
 
 	if (sysctl_sched_sync_hint_enable && sync && about_to_idle) {
-		if (bias_to_waker_cpu(p, cpu, rtg_target)) {
+		if (bias_to_waker_cpu(p, cpu, start_cpu)) {
 			schedstat_inc(p->se.statistics.nr_wakeups_secb_sync);
 			schedstat_inc(this_rq()->eas_stats.secb_sync);
 			target_cpu = cpu;
@@ -7957,6 +7941,10 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 	if (energy_aware()) {
 		rcu_read_lock();
 		new_cpu = select_energy_cpu_brute(p, cpu, prev_cpu, sync);
+
+		if (unlikely(new_cpu < 0))
+			new_cpu = prev_cpu; 
+
 		rcu_read_unlock();
 		return new_cpu;
 	}
