@@ -7821,7 +7821,7 @@ static int select_energy_cpu_brute(struct task_struct *p, int cpu, int prev_cpu,
 	}
 
 	if (use_sync_boost)
-		if (sync && cpu >= cpu_rq(cpu)->rd->max_cap_orig_cpu)
+		if (sync && prefer_idle && cpu >= cpu_rq(cpu)->rd->max_cap_orig_cpu)
 			start_cpu = get_start_cpu(p, rtg_target);
 
 	sd = rcu_dereference(per_cpu(sd_ea, prev_cpu));
