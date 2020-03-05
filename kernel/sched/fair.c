@@ -7203,10 +7203,12 @@ static bool is_packing_eligible(struct task_struct *p, int target_cpu,
 	return (estimated_capacity <= capacity_curr_of(target_cpu));
 }
 
-static int get_start_cpu(struct task_struct *p, bool boosted, struct cpumask *rtg_target)
+static int get_start_cpu(struct task_struct *p, struct cpumask *rtg_target)
 {
 	struct root_domain *rd = cpu_rq(smp_processor_id())->rd;
 	int start_cpu = -1;
+	bool boosted = schedtune_task_boost(p) > 0 ||
+			task_boost_policy(p) == SCHED_BOOST_ON_BIG;
 
 	if (boosted)
 		return rd->max_cap_orig_cpu;
@@ -7774,7 +7776,7 @@ static int select_energy_cpu_brute(struct task_struct *p, int cpu, int prev_cpu,
 	u64 start_t = 0;
 	bool sync_boost = false;
 	bool about_to_idle = (cpu_rq(cpu)->nr_running < 2);
-	int start_cpu = get_start_cpu(p, boosted, rtg_target);
+	int start_cpu = get_start_cpu(p, rtg_target);
 
 	if (start_cpu < 0)
 		return -1;
