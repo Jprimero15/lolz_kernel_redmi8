@@ -7784,11 +7784,8 @@ static int select_energy_cpu_brute(struct task_struct *p, int cpu, int prev_cpu,
 		}
 	}
 
-	if (use_sync_boost) {
+	if (use_sync_boost)
 		sync_boost = sync && cpu >= cpu_rq(cpu)->rd->max_cap_orig_cpu;
-	} else {
-		sync_boost = false;
-	}
 
 	sd = rcu_dereference(per_cpu(sd_ea, prev_cpu));
 	if (!sd) {
