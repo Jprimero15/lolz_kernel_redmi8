@@ -53,6 +53,8 @@ endif
 # Disable gcov profiling for VDSO code
 GCOV_PROFILE := n
 
+ccflags-y += $(call cc-option, -fno-whole-program)
+
 obj-y += vdso.o
 extra-y += vdso.lds
 CPPFLAGS_vdso.lds += -P -C -U$(ARCH)
