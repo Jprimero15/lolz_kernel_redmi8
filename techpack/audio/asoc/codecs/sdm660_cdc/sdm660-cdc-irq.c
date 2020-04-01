@@ -135,10 +135,10 @@ int wcd9xxx_spmi_request_irq(int irq, irq_handler_t handler,
 
 	if (strcmp(name, "mbhc sw intr"))
 		irq_flags = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING |
-			IRQF_ONESHOT;
+			IRQF_ONESHOT | IRQF_PERF_CRITICAL;
 	else
 		irq_flags = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING |
-			IRQF_ONESHOT | IRQF_NO_SUSPEND;
+			IRQF_ONESHOT | IRQF_NO_SUSPEND | IRQF_PERF_CRITICAL;
 	pr_debug("%s: name:%s irq_flags = %lx\n", __func__, name, irq_flags);
 
 	rc = devm_request_threaded_irq(&map.spmi[BIT_BYTE(irq)]->dev,
