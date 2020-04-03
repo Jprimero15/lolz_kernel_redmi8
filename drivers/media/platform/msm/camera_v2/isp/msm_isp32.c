@@ -278,7 +278,7 @@ static int msm_vfe32_init_hardware(struct vfe_device *vfe_dev)
 	}
 
 	rc = request_irq(vfe_dev->vfe_irq->start, msm_isp_process_irq,
-					 IRQF_TRIGGER_RISING, "vfe", vfe_dev);
+					 IRQF_TRIGGER_RISING | IRQF_PERF_CRITICAL, "vfe", vfe_dev);
 	if (rc < 0) {
 		pr_err("%s: irq request failed\n", __func__);
 		goto irq_req_failed;
