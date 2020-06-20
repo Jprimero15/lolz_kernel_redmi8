@@ -247,7 +247,8 @@ void msm_pm_qos_update_request(int val)
 	if (msm_session_q && msm_session_q->len == 0) {
 		pr_info("%s: update request %d", __func__, val);
 		msm_pm_qos_add_request();
-		pm_qos_update_request(&msm_v4l2_pm_qos_request, val);
+	        if (pm_qos_request_active(&msm_v4l2_pm_qos_request))
+		       pm_qos_update_request(&msm_v4l2_pm_qos_request, val);
 	}
 }
 
