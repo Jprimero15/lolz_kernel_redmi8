@@ -55,6 +55,7 @@
 		qcom,initial-pwrlevel = <2>;
 
 		qcom,idle-timeout = <64>; //msecs
+		qcom,deep-nap-timeout = <100>; //msecs
 		qcom,strtstp-sleepwake;
 
 		qcom,highest-bank-bit = <14>;
