@@ -99,10 +99,6 @@
 		vddcx-supply = <&gdsc_oxili_cx>;
 		vdd-supply = <&gdsc_oxili_gx>;
 
-		/* CPU latency parameter */
-		qcom,pm-qos-active-latency = <360>;
-		qcom,pm-qos-wakeup-latency = <360>;
-
 		/*  Quirks  */
 		qcom,gpu-quirk-two-pass-use-wfi;
 		qcom,gpu-quirk-dp2clockgating-disable;
