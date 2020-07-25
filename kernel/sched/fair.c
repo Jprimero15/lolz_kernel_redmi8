@@ -31,11 +31,14 @@
 #include <linux/migrate.h>
 #include <linux/task_work.h>
 #include <linux/module.h>
+#include "../time/tick-sched.h"
 
 #include "sched.h"
 #include "tune.h"
 #include "walt.h"
 #include <trace/events/sched.h>
+
+static DEFINE_PER_CPU(struct tick_sched, tick_cpu_sched);
 
 #ifdef CONFIG_SCHED_WALT
 
@@ -6724,7 +6727,7 @@ find_idlest_group(struct sched_domain *sd, struct task_struct *p,
 				min_avg_load = avg_load;
 				idlest = group;
 			}
-
+			
 			if (most_spare < max_spare_cap) {
 				most_spare = max_spare_cap;
 				most_spare_sg = group;
@@ -6813,6 +6816,25 @@ find_idlest_group_cpu(struct sched_group *group, struct task_struct *p, int this
 			if (load < min_load || (load == min_load && i == this_cpu)) {
 				min_load = load;
 				least_loaded_cpu = i;
+			}
+			
+			/*
+		 	 * Coarsely to get the latest idle cpu for shorter latency and
+			 * possible power benefit.
+		 	 */
+			if (!min_load) {
+				struct tick_sched *ts = &per_cpu(tick_cpu_sched, i);
+
+				s64 latest_wake = 0;
+				/* idle cpu doing irq */
+				if (ts->inidle && !ts->idle_active)
+					least_loaded_cpu = i;
+				/* the cpu resched */
+				else if (!ts->inidle)
+					least_loaded_cpu = i;
+				/* find latest idle cpu */
+				else if (ktime_to_us(ts->idle_entrytime) > latest_wake)
+					least_loaded_cpu = i;
 			}
 		}
 	}
