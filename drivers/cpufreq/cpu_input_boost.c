@@ -21,30 +21,24 @@
 #include <uapi/linux/sched/types.h>
 #endif
 
-static unsigned int input_boost_freq_lp __read_mostly =
-	CONFIG_INPUT_BOOST_FREQ_LP;
-static unsigned int input_boost_freq_hp __read_mostly =
-	CONFIG_INPUT_BOOST_FREQ_PERF;
 static unsigned int max_boost_freq_lp __read_mostly =
 	CONFIG_MAX_BOOST_FREQ_LP;
 static unsigned int max_boost_freq_hp __read_mostly =
 	CONFIG_MAX_BOOST_FREQ_PERF;
-static unsigned int remove_input_boost_freq_lp __read_mostly =
-	CONFIG_REMOVE_INPUT_BOOST_FREQ_LP;
-static unsigned int remove_input_boost_freq_perf __read_mostly =
-	CONFIG_REMOVE_INPUT_BOOST_FREQ_PERF;
+static unsigned int min_freq_lp __read_mostly =
+	CONFIG_MIN_FREQ_LP;
+static unsigned int min_freq_perf __read_mostly =
+	CONFIG_MIN_FREQ_PERF;
 
 static unsigned short input_boost_duration __read_mostly =
 	CONFIG_INPUT_BOOST_DURATION_MS;
 static unsigned short wake_boost_duration __read_mostly =
 	CONFIG_WAKE_BOOST_DURATION_MS;
 
-module_param(input_boost_freq_lp, uint, 0644);
-module_param(input_boost_freq_hp, uint, 0644);
 module_param(max_boost_freq_lp, uint, 0644);
 module_param(max_boost_freq_hp, uint, 0644);
-module_param(remove_input_boost_freq_lp, uint, 0644);
-module_param(remove_input_boost_freq_perf, uint, 0644);
+module_param(min_freq_lp, uint, 0644);
+module_param(min_freq_perf, uint, 0644);
 
 module_param(input_boost_duration, short, 0644);
 module_param(wake_boost_duration, short, 0644);
@@ -85,18 +79,6 @@ static struct boost_drv boost_drv_g __read_mostly = {
 	.boost_waitq = __WAIT_QUEUE_HEAD_INITIALIZER(boost_drv_g.boost_waitq)
 };
 
-static unsigned int get_input_boost_freq(struct cpufreq_policy *policy)
-{
-	unsigned int freq;
-
-	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
-		freq = input_boost_freq_lp;
-	else
-		freq = input_boost_freq_hp;
-
-	return min(freq, policy->max);
-}
-
 static unsigned int get_max_boost_freq(struct cpufreq_policy *policy)
 {
 	unsigned int freq;
@@ -114,9 +96,9 @@ static unsigned int get_min_freq(struct cpufreq_policy *policy)
 	unsigned int freq;
 
 	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
-		freq = remove_input_boost_freq_lp;
+		freq = min_freq_lp;
 	else
-		freq = remove_input_boost_freq_perf;
+		freq = min_freq_perf;
 
 	return max(freq, policy->cpuinfo.min_freq);
 }
@@ -267,12 +249,11 @@ static int cpu_notifier_cb(struct notifier_block *nb, unsigned long action,
 	if (action != CPUFREQ_ADJUST)
 		return NOTIFY_OK;
 
+	policy->min = get_min_freq(policy);
+
 	/* Unboost when the screen is off */
-	if (test_bit(SCREEN_OFF, &b->state)) {
-		policy->min = get_min_freq(policy);
+	if (test_bit(SCREEN_OFF, &b->state))
 		clear_stune_boost(b);
-		return NOTIFY_OK;
-	}
 
 	/* Boost CPU to max frequency for max boost */
 	if (test_bit(MAX_BOOST, &b->state)) {
@@ -281,17 +262,10 @@ static int cpu_notifier_cb(struct notifier_block *nb, unsigned long action,
 		return NOTIFY_OK;
 	}
 
-	/*
-	 * Boost to policy->max if the boost frequency is higher. When
-	 * unboosting, set policy->min to the absolute min freq for the CPU.
-	 */
-	if (test_bit(INPUT_BOOST, &b->state)) {
-		policy->min = get_input_boost_freq(policy);
+	if (test_bit(INPUT_BOOST, &b->state))
 		update_stune_boost(b, stune_boost);
-	} else {
-		policy->min = get_min_freq(policy);
+	else
 		clear_stune_boost(b);
-	}
 
 	return NOTIFY_OK;
 }
