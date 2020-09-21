@@ -8946,7 +8946,7 @@ redo:
 			(env->flags & LBF_IGNORE_BIG_TASKS)) &&
 			((!IS_ENABLED(CONFIG_PREEMPT) ||
 			env->idle != CPU_NEWLY_IDLE) &&
-			(load / 2) > env->imbalance))
+			(load >> env->sd->nr_balance_failed) > env->imbalance))
 			goto next;
 
 		detach_task(p, env);
