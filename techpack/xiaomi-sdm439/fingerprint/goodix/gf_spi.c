@@ -643,12 +643,12 @@ static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 	unsigned int blank;
 	char msg = 0;
 
-	if (val != FB_EARLY_EVENT_BLANK)
+	if (val != FB_EVENT_BLANK)
 		return 0;
 	pr_info("[info] %s go to the goodix_fb_state_chg_callback value = %d\n",
 			__func__, (int)val);
 	gf_dev = container_of(nb, struct gf_dev, notifier);
-	if (evdata && evdata->data && val == FB_EARLY_EVENT_BLANK && gf_dev) {
+	if (evdata && evdata->data && val == FB_EVENT_BLANK && gf_dev) {
 		blank = *(int *)(evdata->data);
 		switch (blank) {
 		case FB_BLANK_POWERDOWN:
