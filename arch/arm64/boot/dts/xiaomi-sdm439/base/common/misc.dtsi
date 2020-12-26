@@ -8,3 +8,7 @@
 		vituralsar,irq-gpio = <&tlmm 126 0x2008>;
 	};
 };
+
+&msm_gpu {
+	qcom,idle-timeout = <64>; //msecs
+};
