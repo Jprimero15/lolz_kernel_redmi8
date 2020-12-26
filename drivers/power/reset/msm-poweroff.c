@@ -58,7 +58,7 @@ static bool scm_deassert_ps_hold_supported;
 static void __iomem *msm_ps_hold;
 static phys_addr_t tcsr_boot_misc_detect;
 static void scm_disable_sdi(void);
-static bool force_warm_reboot;
+static bool force_warm_reboot = true;
 
 #ifdef CONFIG_QCOM_DLOAD_MODE
 /* Runtime could be only changed value once.
@@ -706,9 +706,6 @@ skip_sysfs_create:
 	set_dload_mode(download_mode);
 	if (!download_mode)
 		scm_disable_sdi();
-
-	force_warm_reboot = of_property_read_bool(dev->of_node,
-						"qcom,force-warm-reboot");
 
 	return 0;
 
