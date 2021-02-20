@@ -3070,6 +3070,11 @@ extern void sched_exit(struct task_struct *p);
 static inline void sched_exit(struct task_struct *p) { }
 #endif
 
+struct {
+	struct work_struct work;
+	atomic_t running;
+	bool free_stack;
+} async_free;
 
 extern void proc_caches_init(void);
 extern void flush_signals(struct task_struct *);
