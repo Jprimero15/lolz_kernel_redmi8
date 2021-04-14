@@ -451,7 +451,7 @@ static struct alpha_pll_masks pll_masks_p = {
  * Hence will have only one vco table entry
  */
 static struct alpha_pll_vco_tbl p_vco[] = {
-	VCO(0,  700000000, 1400000000),
+	VCO(0,  700000000, 1600000000),
 };
 
 /* Slewing plls won't allow to change vco_sel.
@@ -483,7 +483,7 @@ static struct alpha_pll_clk gpll3_clk_src = {
 		.parent = &xo_clk_src.c,
 		.dbg_name = "gpll3_clk_src",
 		.ops = &clk_ops_dyna_alpha_pll,
-		VDD_DIG_FMAX_MAP1(NOMINAL, 1400000000),
+		VDD_DIG_FMAX_MAP1(NOMINAL, 1500000000),
 		CLK_INIT(gpll3_clk_src.c),
 	},
 };
@@ -499,7 +499,7 @@ static struct pll_vote_clk gpll4_clk_src = {
 		.parent = &xo_clk_src.c,
 		.dbg_name = "gpll4_clk_src",
 		.ops = &clk_ops_pll_vote,
-		VDD_DIG_FMAX_MAP1(NOMINAL, 1400000000),
+		VDD_DIG_FMAX_MAP1(NOMINAL, 1500000000),
 		CLK_INIT(gpll4_clk_src.c),
 	},
 };
@@ -789,6 +789,8 @@ static struct clk_freq_tbl ftbl_gcc_oxili_gfx3d_clk_sdm439[] = {
 	F_SLEW( 510000000, 1020000000,	  gpll3,	1,	0,	0),
 	F_SLEW( 560000000, 1120000000,	  gpll3,	1,	0,	0),
 	F_SLEW( 650000000, 1300000000,	  gpll3,	1,	0,	0),
+	F_SLEW( 700000000, 1400000000,    gpll3,        1,      0,      0),
+        F_SLEW( 750000000, 1500000000,    gpll3,        1,      0,      0),
 	F_END
 };
 
@@ -4548,7 +4550,7 @@ static int msm_gcc_probe(struct platform_device *pdev)
 			gpll3_clk_src.vco_tbl = p_vco;
 			gpll3_clk_src.num_vco = ARRAY_SIZE(p_vco);
 			gpll3_clk_src.c.fmax[VDD_DIG_LOW] = 800000000;
-			gpll3_clk_src.c.fmax[VDD_DIG_NOMINAL] = 1400000000;
+			gpll3_clk_src.c.fmax[VDD_DIG_NOMINAL] = 1500000000;
 			gfx3d_clk_src.freq_tbl =
 					ftbl_gcc_oxili_gfx3d_clk_sdm439;
 
@@ -4556,7 +4558,7 @@ static int msm_gcc_probe(struct platform_device *pdev)
 			gfx3d_clk_src.c.fmax[VDD_DIG_LOW] = 400000000;
 			gfx3d_clk_src.c.fmax[VDD_DIG_NOMINAL] = 510000000;
 			gfx3d_clk_src.c.fmax[VDD_DIG_NOM_PLUS] = 560000000;
-			gfx3d_clk_src.c.fmax[VDD_DIG_HIGH] = 650000000;
+			gfx3d_clk_src.c.fmax[VDD_DIG_HIGH] = 750000000;
 		}
 
 		if (compat_bin3) {
