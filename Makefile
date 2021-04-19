@@ -986,7 +986,7 @@ ifeq ($(strip $(TARGET_PRODUCT)) , peony)
 else ifeq ($(strip $(TARGET_PRODUCT)) , pine)
 # Define macros here only for Pine project
 KBUILD_CFLAGS += -DPROJECT_PINE
-else ifeq ($(strip $(TARGET_PRODUCT)) , olive)
+else ifeq ($(strip $(TARGET_PRODUCT)) , lolz)
 # Define macros here only for Olive project
 KBUILD_CFLAGS += -DPROJECT_OLIVE
 else ifeq ($(strip $(TARGET_PRODUCT)) , olivelite)
