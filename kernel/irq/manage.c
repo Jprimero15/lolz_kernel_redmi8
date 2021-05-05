@@ -28,6 +28,7 @@ struct irq_desc_list {
 } perf_crit_irqs = {
 	.list = LIST_HEAD_INIT(perf_crit_irqs.list)
 };
+
 static DEFINE_RAW_SPINLOCK(perf_irqs_lock);
 static int perf_cpu_index = -1;
 
@@ -1611,6 +1612,20 @@ static struct irqaction *__free_irq(unsigned int irq, void *dev_id)
 		if (action->dev_id == dev_id)
 			break;
 		action_ptr = &action->next;
+	}
+
+	if (action->flags & IRQF_PERF_CRITICAL) {
+		struct irq_desc_list *data;
+
+		raw_spin_lock(&perf_irqs_lock);
+		list_for_each_entry(data, &perf_crit_irqs.list, list) {
+			if (data->desc == desc) {
+				list_del(&data->list);
+				kfree(data);
+				break;
+			}
+		}
+		raw_spin_unlock(&perf_irqs_lock);
 	}
 
 	/* Found it - now remove it from the list of entries: */
