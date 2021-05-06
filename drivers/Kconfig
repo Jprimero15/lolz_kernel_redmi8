@@ -214,5 +214,4 @@ source "drivers/tee/Kconfig"
 
 source "drivers/switch/Kconfig"
 
-source "drivers/energy_model/Kconfig"
 endmenu
