@@ -48,6 +48,7 @@
 #include <linux/kthread.h>
 #include <linux/dma-buf.h>
 #include <linux/devfreq_boost.h>
+#include <linux/cpu_input_boost.h>
 
 #include "mdss_fb.h"
 #include "mdss_mdp_splash_logo.h"
@@ -96,6 +97,9 @@ extern uint32_t white_point_num_b;
  * Default value is set to 1 sec.
  */
 #define MDP_TIME_PERIOD_CALC_FPS_US	1000000
+
+static int frame_boost_timeout __read_mostly = CONFIG_MSM_FRAME_BOOST_TIMEOUT;
+module_param(frame_boost_timeout, int, 0644);
 
 static struct fb_info *fbi_list[MAX_FBI_LIST];
 static int fbi_list_index;
@@ -147,6 +151,16 @@ void mdss_fb_no_update_notify_timer_cb(unsigned long data)
 	}
 	mfd->no_update.value = NOTIFY_TYPE_NO_UPDATE;
 	complete(&mfd->no_update.comp);
+}
+
+static void msm_kick_frame_boost(int timeout_ms)
+{
+	if (!timeout_ms)
+		return;
+
+	if (timeout_ms < 0 || should_kick_frame_boost(timeout_ms)) {
+		devfreq_boost_kick(DEVFREQ_MSM_CPUBW);
+	}
 }
 
 void mdss_fb_bl_update_notify(struct msm_fb_data_type *mfd,
@@ -5288,7 +5302,7 @@ int mdss_fb_do_ioctl(struct fb_info *info, unsigned int cmd,
 		ret = mdss_fb_mode_switch(mfd, dsi_mode);
 		break;
 	case MSMFB_ATOMIC_COMMIT:
-		devfreq_boost_kick(DEVFREQ_MSM_CPUBW);
+		msm_kick_frame_boost(frame_boost_timeout);
 		ret = mdss_fb_atomic_commit_ioctl(info, argp, file);
 		break;
 
