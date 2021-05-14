@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -42,6 +42,7 @@
 #define AFE_CLK_VERSION_V1    1
 #define AFE_CLK_VERSION_V2    2
 #define AFE_API_VERSION_SUPPORT_SPV3	2
+#define AFE_API_VERSION_V3		3
 typedef int (*routing_cb)(int port);
 
 enum {
@@ -225,6 +226,9 @@ enum {
 	IDX_AFE_PORT_ID_QUINARY_TDM_RX_7,
 	IDX_AFE_PORT_ID_QUINARY_TDM_TX_7,
 	IDX_AFE_LOOPBACK_TX,
+	/* IDX 161 -> 162 */
+	IDX_RT_PROXY_PORT_002_RX,
+	IDX_RT_PROXY_PORT_002_TX,
 	AFE_MAX_PORTS
 };
 
