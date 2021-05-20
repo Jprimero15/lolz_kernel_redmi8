@@ -1,5 +1,7 @@
 ifeq ($(cc-name),clang)
 KBUILD_CFLAGS 	+= $(DISABLE_LTO)
+ccflags-y += $(call cc-option, -g0)
+ccflags-y += $(call cc-option, -Os)
 endif
 
 obj-$(CONFIG_MSM_VIDC_3X_V4L2) := 	msm_v4l2_vidc.o \
