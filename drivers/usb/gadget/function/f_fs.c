@@ -2063,13 +2063,12 @@ static void ffs_data_reset(struct ffs_data *ffs)
 	ffs->setup_state = FFS_NO_SETUP;
 	ffs->flags = 0;
 
-
-	ffs_log("exit: state %d setup_state %d flag %lu", ffs->state,
-		ffs->setup_state, ffs->flags);
-
 	ffs->ms_os_descs_ext_prop_count = 0;
 	ffs->ms_os_descs_ext_prop_name_len = 0;
 	ffs->ms_os_descs_ext_prop_data_len = 0;
+
+	ffs_log("exit: state %d setup_state %d flag %lu", ffs->state,
+		ffs->setup_state, ffs->flags);
 }
 
 
@@ -2976,7 +2975,6 @@ static int __ffs_data_got_strings(struct ffs_data *ffs,
 
 	do { /* lang_count > 0 so we can use do-while */
 		unsigned needed = needed_count;
-		u32 str_per_lang = str_count;
 
 		if (unlikely(len < 3))
 			goto error_free;
@@ -3012,7 +3010,7 @@ static int __ffs_data_got_strings(struct ffs_data *ffs,
 
 			data += length + 1;
 			len -= length + 1;
-		} while (--str_per_lang);
+		} while (--str_count);
 
 		s->id = 0;   /* terminator */
 		s->s = NULL;

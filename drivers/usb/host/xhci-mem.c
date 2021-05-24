@@ -1532,7 +1532,6 @@ int xhci_endpoint_init(struct xhci_hcd *xhci,
 	/* Allow 3 retries for everything but isoc, set CErr = 3 */
 	if (!usb_endpoint_xfer_isoc(&ep->desc))
 		err_count = 3;
-
 	/* HS bulk max packet should be 512, FS bulk supports 8, 16, 32 or 64 */
 	if (usb_endpoint_xfer_bulk(&ep->desc)) {
 		if (udev->speed == USB_SPEED_HIGH)
@@ -1542,7 +1541,6 @@ int xhci_endpoint_init(struct xhci_hcd *xhci,
 			max_packet = clamp_val(max_packet, 8, 64);
 		}
 	}
-
 	/* xHCI 1.0 and 1.1 indicates that ctrl ep avg TRB Length should be 8 */
 	if (usb_endpoint_xfer_control(&ep->desc) && xhci->hci_version >= 0x100)
 		avg_trb_len = 8;
@@ -2263,15 +2261,6 @@ static void xhci_add_in_port(struct xhci_hcd *xhci, unsigned int num_ports,
 
 	if (major_revision == 0x03) {
 		rhub = &xhci->usb3_rhub;
-		/*
-		 * Some hosts incorrectly use sub-minor version for minor
-		 * version (i.e. 0x02 instead of 0x20 for bcdUSB 0x320 and 0x01
-		 * for bcdUSB 0x310). Since there is no USB release with sub
-		 * minor version 0x301 to 0x309, we can assume that they are
-		 * incorrect and fix it here.
-		 */
-		if (minor_revision > 0x00 && minor_revision < 0x10)
-			minor_revision <<= 4;
 	} else if (major_revision <= 0x02) {
 		rhub = &xhci->usb2_rhub;
 	} else {
