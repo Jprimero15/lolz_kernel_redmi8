@@ -6,10 +6,10 @@
 #include <linux/err.h>
 #include <linux/uaccess.h>
 #include <linux/of_gpio.h>
-#include <linux/gpio.h>
+#include <asm/gpio.h>
 #include <linux/gpio_keys.h>
 #define cpumaxfreq_proc_name "cpumaxfreq"
-static struct proc_dir_entry *cpumaxfreq_proc;
+static struct proc_dir_entry * cpumaxfreq_proc = NULL;
 #define CPU_PRESENT   "/sys/devices/system/cpu/present"
 
 #define SDCARD_DET_N_GPIO 67
@@ -18,7 +18,8 @@ int find_symbol_form_string(char *string, char symbol)
 {
 
 	int i = 0;
-	while (!(string[i] == symbol)) {
+	while(!(string[i] == symbol))
+	{
 		++i;
 	}
     return i+1;
@@ -31,14 +32,13 @@ int read_file(char *file_path, char *buf, int size)
 	mm_segment_t old_fs;
 	loff_t pos;
 	int ret;
-	struct filename *vts_name;
-
-	vts_name = getname_kernel(file_path);
-	file_p = file_open_name(vts_name, O_RDONLY, 0);
-	if (IS_ERR(file_p)) {
+	file_p = filp_open(file_path, 0444, 0);
+	if(IS_ERR(file_p))
+	{
 			pr_err("%s fail to open file \n", __func__);
-			return -EPERM;
-	} else {
+			return -1;
+	}
+	else{
 		old_fs = get_fs();
 		set_fs(KERNEL_DS);
 		pos = 0;
@@ -73,28 +73,30 @@ void read_cpumaxfreq(char *cpumaxfreq_buf)
 	long cpumaxfreq = 0;
 	int core_count = 0;
 	core_count = get_core_count();
-	//find max freq cpu
-	while (i < core_count) {
-		memset(buf, 0, sizeof(buf));
+
+	while(i < core_count)
+	{
+		memset(buf, sizeof(buf), 0);
 		snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq", i);
 		read_file(path, buf, sizeof(buf));
-		if (simple_strtoul(buf, NULL, 0) > cpumaxfreq)
+		if(simple_strtoul(buf, NULL, 0) > cpumaxfreq)
 			cpumaxfreq = simple_strtoul(buf, NULL, 0);
 
 		++i;
 	}
-	//get max freq
-	snprintf (cpumaxfreq_buf, 16, "%u.%u", (uint16_t)(cpumaxfreq/1000000),
+
+	sprintf(cpumaxfreq_buf, "%u.%u", (uint16_t)(cpumaxfreq/1000000),
 		(uint16_t)((cpumaxfreq/100000)%10));
 }
 
-static int cpumaxfreq_show(struct seq_file *file, void *data)
+static int cpumaxfreq_show(struct seq_file* file, void *data)
 {
 	char cpumaxfreq_buf[16];
 #if 0
 	char *cpumaxfreq_buf = NULL;
-	cpumaxfreq_buf = kmalloc(sizeof(*cpumaxfreq_buf)*cpu_num*32, GFP_KERNEL);//32bytes for every cpu
-	if (IS_ERR(cpumaxfreq_buf)) {
+	cpumaxfreq_buf = kmalloc(sizeof(*cpumaxfreq_buf)*cpu_num*32, GFP_KERNEL);
+	if(IS_ERR(cpumaxfreq_buf))
+	{
 		pr_err("%s cpumaxfreq_buf kmalloc fail.\n", __func__);
 		return PTR_ERR(cpumaxfreq_buf);
 	}
@@ -104,14 +106,14 @@ static int cpumaxfreq_show(struct seq_file *file, void *data)
 	read_cpumaxfreq(cpumaxfreq_buf);
 	seq_printf(file, "%s", cpumaxfreq_buf);
 #if 0
-	if (!cpumaxfreq_buf)
+	if(!cpumaxfreq_buf)
 		kfree(cpumaxfreq_buf);
 #endif
 	return 0;
 
 
 }
-static int cpumaxfreq_open(struct inode *inode, struct file *file)
+static int cpumaxfreq_open(struct inode* inode, struct file* file)
 {
 	return single_open(file, cpumaxfreq_show, inode->i_private);
 }
@@ -121,13 +123,13 @@ static const struct file_operations cpumaxfreq_ops = {
 		.read = seq_read,
 };
 
-//Add node for sdc_det_gpio_status
 
-static struct proc_dir_entry *sdc_det_gpio_status;
+
+static struct proc_dir_entry *sdc_det_gpio_status = NULL;
 
 #define SDC_DET_GPIO_STATUS "sdc_det_gpio_status"
 
-static int sdc_det_gpio_proc_show(struct seq_file *file, void *data)
+static int sdc_det_gpio_proc_show(struct seq_file *file, void* data)
 {
 	int sdc_detect_status = 0;
 
@@ -143,12 +145,13 @@ static int sdc_det_gpio_proc_show(struct seq_file *file, void *data)
 	return 0;
 }
 
-static int sdc_det_gpio_proc_open(struct inode *inode, struct file *file)
+static int sdc_det_gpio_proc_open(struct inode* inode, struct file* file)
 {
 	return single_open(file, sdc_det_gpio_proc_show, inode->i_private);
 }
 
-static const struct file_operations sdc_det_gpio_status_ops = {
+static const struct file_operations sdc_det_gpio_status_ops =
+{
 	.open = sdc_det_gpio_proc_open,
 	.read = seq_read,
 };
@@ -158,14 +161,16 @@ int create_fs(void)
 	/*proc/cpumaxfreq*/
 	long rc = 1;
 	cpumaxfreq_proc = proc_create(cpumaxfreq_proc_name, 0444, NULL, &cpumaxfreq_ops);
-	if (IS_ERR(cpumaxfreq_proc)) {
+	if(IS_ERR(cpumaxfreq_proc))
+	{
 		pr_err("%s cpumaxfreq proc create fail.\n", __func__);
 		rc = PTR_ERR(cpumaxfreq_proc);
 	}
 
-	//proc/sdc_det_gpio_status
+
 	sdc_det_gpio_status = proc_create(SDC_DET_GPIO_STATUS, 0644, NULL, &sdc_det_gpio_status_ops);
-	if (sdc_det_gpio_status == NULL) {
+	if (sdc_det_gpio_status == NULL)
+	{
 		printk("tpd, create_proc_entry sdc_det_gpio_status_ops failed\n");
 	}
 
@@ -182,7 +187,7 @@ static int __init mi_fs_init(void)
 }
 
 
-late_initcall(mi_fs_init); //after module_init
+late_initcall(mi_fs_init);
 MODULE_AUTHOR("ninjia <nijiayu@huaqin.com>");
 MODULE_DESCRIPTION("MI FS For Adaptation");
 MODULE_LICENSE("GPL");
