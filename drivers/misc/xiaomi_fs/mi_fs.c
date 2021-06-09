@@ -8,9 +8,6 @@
 #include <linux/of_gpio.h>
 #include <linux/gpio.h>
 #include <linux/gpio_keys.h>
-#define cpumaxfreq_proc_name "cpumaxfreq"
-static struct proc_dir_entry *cpumaxfreq_proc;
-#define CPU_PRESENT   "/sys/devices/system/cpu/present"
 
 #define SDCARD_DET_N_GPIO 67
 
@@ -50,76 +47,6 @@ int read_file(char *file_path, char *buf, int size)
 
 	return ret;
 }
-int get_core_count(void)
-{
-    char buf[8] = {0};
-	int symbol_position = 0;
-	int core_count = 0;
-	read_file(CPU_PRESENT, buf, sizeof(buf));
-	symbol_position = find_symbol_form_string(buf, '-');
-
-	core_count = buf[symbol_position]-'0'+1;
-
-	return core_count;
-
-
-
-}
-void read_cpumaxfreq(char *cpumaxfreq_buf)
-{
-	uint16_t i = 0;
-	char buf[16] = {0};
-	char path[128] = {0};
-	long cpumaxfreq = 0;
-	int core_count = 0;
-	core_count = get_core_count();
-	//find max freq cpu
-	while (i < core_count) {
-		memset(buf, 0, sizeof(buf));
-		snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq", i);
-		read_file(path, buf, sizeof(buf));
-		if (simple_strtoul(buf, NULL, 0) > cpumaxfreq)
-			cpumaxfreq = simple_strtoul(buf, NULL, 0);
-
-		++i;
-	}
-	//get max freq
-	snprintf (cpumaxfreq_buf, 16, "%u.%u", (uint16_t)(cpumaxfreq/1000000),
-		(uint16_t)((cpumaxfreq/100000)%10));
-}
-
-static int cpumaxfreq_show(struct seq_file *file, void *data)
-{
-	char cpumaxfreq_buf[16];
-#if 0
-	char *cpumaxfreq_buf = NULL;
-	cpumaxfreq_buf = kmalloc(sizeof(*cpumaxfreq_buf)*cpu_num*32, GFP_KERNEL);//32bytes for every cpu
-	if (IS_ERR(cpumaxfreq_buf)) {
-		pr_err("%s cpumaxfreq_buf kmalloc fail.\n", __func__);
-		return PTR_ERR(cpumaxfreq_buf);
-	}
-	memset(cpumaxfreq_buf, 0, sizeof(*cpumaxfreq_buf)*cpu_num*32);
-#endif
-	memset(cpumaxfreq_buf, 0, sizeof(cpumaxfreq_buf));
-	read_cpumaxfreq(cpumaxfreq_buf);
-	seq_printf(file, "%s", cpumaxfreq_buf);
-#if 0
-	if (!cpumaxfreq_buf)
-		kfree(cpumaxfreq_buf);
-#endif
-	return 0;
-
-
-}
-static int cpumaxfreq_open(struct inode *inode, struct file *file)
-{
-	return single_open(file, cpumaxfreq_show, inode->i_private);
-}
-static const struct file_operations cpumaxfreq_ops = {
-	    .owner = THIS_MODULE,
-		.open = cpumaxfreq_open,
-		.read = seq_read,
-};
 
 //Add node for sdc_det_gpio_status
 
@@ -155,15 +82,8 @@ static const struct file_operations sdc_det_gpio_status_ops = {
 
 int create_fs(void)
 {
-	/*proc/cpumaxfreq*/
-	long rc = 1;
-	cpumaxfreq_proc = proc_create(cpumaxfreq_proc_name, 0444, NULL, &cpumaxfreq_ops);
-	if (IS_ERR(cpumaxfreq_proc)) {
-		pr_err("%s cpumaxfreq proc create fail.\n", __func__);
-		rc = PTR_ERR(cpumaxfreq_proc);
-	}
-
 	//proc/sdc_det_gpio_status
+	long rc = 1;
 	sdc_det_gpio_status = proc_create(SDC_DET_GPIO_STATUS, 0644, NULL, &sdc_det_gpio_status_ops);
 	if (sdc_det_gpio_status == NULL) {
 		printk("tpd, create_proc_entry sdc_det_gpio_status_ops failed\n");
