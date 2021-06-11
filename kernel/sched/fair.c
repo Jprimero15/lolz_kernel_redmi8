@@ -5117,7 +5117,7 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 #ifdef CONFIG_SMP
 	int task_new = flags & ENQUEUE_WAKEUP_NEW;
 #endif
-	bool prefer_idle = schedtune_prefer_idle(p) > 0;
+	bool prefer_idle = uclamp_latency_sensitive(p) > 0;
 
 #ifdef CONFIG_SCHED_WALT
 	p->misfit = !task_fits_max(p, rq->cpu);
@@ -6500,7 +6500,7 @@ static inline bool task_fits_max(struct task_struct *p, int cpu)
 		return true;
 
 	if ((task_boost_policy(p) == SCHED_BOOST_ON_BIG ||
-		schedtune_task_boost(p) > 0) &&
+		uclamp_boosted(p) > 0) &&
 		is_min_capacity_cpu(cpu))
 		return false;
 
@@ -6614,7 +6614,7 @@ boosted_task_util(struct task_struct *p)
 {
 #ifdef CONFIG_UCLAMP_TASK_GROUP
 	unsigned long util = task_util_est(p);
-	unsigned long util_min = uclamp_eff_value(p, UCLAMP_MIN)
+	unsigned long util_min = uclamp_eff_value(p, UCLAMP_MIN);
 	unsigned long util_max = uclamp_eff_value(p, UCLAMP_MAX);
 	return clamp(util, util_min, util_max);
 #else
@@ -7216,7 +7216,7 @@ static int get_start_cpu(struct task_struct *p, struct cpumask *rtg_target)
 {
 	struct root_domain *rd = cpu_rq(smp_processor_id())->rd;
 	int start_cpu = -1;
-	bool boosted = schedtune_task_boost(p) > 0 ||
+	bool boosted = uclamp_boosted(p) > 0 ||
 			task_boost_policy(p) == SCHED_BOOST_ON_BIG;
 
 	if (boosted)
@@ -8778,7 +8778,7 @@ int can_migrate_task(struct task_struct *p, struct lb_env *env)
 	 */
 	if (!env->src_rq->rd->overutilized &&
 		(cpu_capacity(env->dst_cpu) < cpu_capacity(env->src_cpu)) &&
-		(schedtune_task_boost(p) > 0))
+		(uclamp_boosted(p) > 0))
 		return 0;
 
 	if (task_running(env->src_rq, p)) {
