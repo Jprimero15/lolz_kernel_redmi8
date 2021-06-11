@@ -354,7 +354,7 @@ wpt_status wpalEnableInterrupt
       if (!gpEnv->rx_registered) 
       {
          gpEnv->rx_registered = 1;
-         ret = request_irq(gpEnv->rx_irq, wpalRxIsr, IRQF_TRIGGER_HIGH | IRQF_PERF_CRITICAL,
+         ret = request_irq(gpEnv->rx_irq, wpalRxIsr, IRQF_TRIGGER_HIGH,
                      "wcnss_wlan", gpEnv);
          if (ret) {
             WPAL_TRACE(eWLAN_MODULE_DAL_DATA, eWLAN_PAL_TRACE_LEVEL_ERROR,
@@ -384,7 +384,7 @@ wpt_status wpalEnableInterrupt
       if (!gpEnv->tx_registered) 
       {
          gpEnv->tx_registered = 1;
-         ret = request_irq(gpEnv->tx_irq, wpalTxIsr, IRQF_TRIGGER_HIGH | IRQF_PERF_CRITICAL,
+         ret = request_irq(gpEnv->tx_irq, wpalTxIsr, IRQF_TRIGGER_HIGH,
                            "wcnss_wlan", gpEnv);
          if (ret) {
             WPAL_TRACE(eWLAN_MODULE_DAL_DATA, eWLAN_PAL_TRACE_LEVEL_ERROR,
