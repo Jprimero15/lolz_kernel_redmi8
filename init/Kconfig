@@ -743,7 +743,6 @@ config UCLAMP_BUCKETS_COUNT
 	  If in doubt, use the default value.
 
 endmenu
->>>>>>> e3684748ff27... UPSTREAM: sched/uclamp: Add CPU's clamp buckets refcounting
 
 config UCLAMP_ASSIST
 	bool "UClamp configuration helper"
