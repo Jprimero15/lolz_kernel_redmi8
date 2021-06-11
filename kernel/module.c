@@ -3023,7 +3023,7 @@ static int check_modinfo(struct module *mod, struct load_info *info, int flags)
 	check_modinfo_retpoline(mod, info);
 
 	if (get_modinfo(info, "staging")) {
-		add_taint_module(mod, TAINT_CRAP, LOCKDEP_STILL_OK);
+		//add_taint_module(mod, TAINT_CRAP, LOCKDEP_STILL_OK);
 		pr_warn("%s: module is from the staging directory, the quality "
 			"is unknown, you have been warned.\n", mod->name);
 	}
