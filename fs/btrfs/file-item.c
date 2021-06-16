@@ -608,7 +608,7 @@ int btrfs_del_csums(struct btrfs_trans_handle *trans,
 	u64 end_byte = bytenr + len;
 	u64 csum_end;
 	struct extent_buffer *leaf;
-	int ret = 0;
+	int ret;
 	u16 csum_size = btrfs_super_csum_size(root->fs_info->super_copy);
 	int blocksize_bits = root->fs_info->sb->s_blocksize_bits;
 
@@ -626,7 +626,6 @@ int btrfs_del_csums(struct btrfs_trans_handle *trans,
 		path->leave_spinning = 1;
 		ret = btrfs_search_slot(trans, root, &key, path, -1, 1);
 		if (ret > 0) {
-			ret = 0;
 			if (path->slots[0] == 0)
 				break;
 			path->slots[0]--;
@@ -657,7 +656,7 @@ int btrfs_del_csums(struct btrfs_trans_handle *trans,
 		if (key.offset >= bytenr && csum_end <= end_byte) {
 			ret = btrfs_del_item(trans, root, path);
 			if (ret)
-				break;
+				goto out;
 			if (key.offset == bytenr)
 				break;
 		} else if (key.offset < bytenr && csum_end > end_byte) {
@@ -701,9 +700,8 @@ int btrfs_del_csums(struct btrfs_trans_handle *trans,
 			ret = btrfs_split_item(trans, root, path, &key, offset);
 			if (ret && ret != -EAGAIN) {
 				btrfs_abort_transaction(trans, ret);
-				break;
+				goto out;
 			}
-			ret = 0;
 
 			key.offset = end_byte - 1;
 		} else {
@@ -713,6 +711,8 @@ int btrfs_del_csums(struct btrfs_trans_handle *trans,
 		}
 		btrfs_release_path(path);
 	}
+	ret = 0;
+out:
 	btrfs_free_path(path);
 	return ret;
 }
