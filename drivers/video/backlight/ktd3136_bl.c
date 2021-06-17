@@ -25,7 +25,7 @@ struct ktd3137_chip *bkl_chip;
 
 #define KTD_DEBUG
 
- #ifdef KTD_DEBUG
+#ifdef KTD_DEBUG
 #define LOG_DBG(fmt, args...) printk(KERN_INFO "[ktd]"fmt"\n", ##args)
 #endif
 

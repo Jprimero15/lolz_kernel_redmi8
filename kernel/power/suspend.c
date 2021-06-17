@@ -575,10 +575,10 @@ int pm_suspend(suspend_state_t state)
 
 	pm_suspend_marker("entry");
 	smsm_change_state(SMSM_APPS_STATE, SMSM_PROC_AWAKE, 0);
-	pr_warn("%s: PM: PM_SUPEND_PREPARE smsm_change_state", __func__);
+	pr_debug("%s: PM: PM_SUPEND_PREPARE smsm_change_state", __func__);
 	error = enter_state(state);
 	smsm_change_state(SMSM_APPS_STATE, 0, SMSM_PROC_AWAKE);
-	pr_warn("%s: PM: PM_POST_SUSPEND smsm_change_state", __func__);
+	pr_debug("%s: PM: PM_POST_SUSPEND smsm_change_state", __func__);
 	if (error) {
 		suspend_stats.fail++;
 		dpm_save_failed_errno(error);
