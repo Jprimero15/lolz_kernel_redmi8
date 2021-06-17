@@ -130,6 +130,21 @@ static char *initcall_command_line;
 static char *execute_command;
 static char *ramdisk_execute_command;
 
+static unsigned int android_vndk_version = 29; // Default VNDK of olives
+
+static int __init set_android_vndk_version(char *val)
+{
+	get_option(&val, &android_vndk_version);
+	return 0;
+}
+
+__setup("androidboot.vndk_version=", set_android_vndk_version);
+
+unsigned int get_android_vndk_version(void)
+{
+	return android_vndk_version;
+}
+
 /*
  * Used to generate warnings if static_key manipulation functions are used
  * before jump_label_init is called.
