@@ -381,7 +381,7 @@ static int msm_dig_cdc_codec_enable_interpolator(struct snd_soc_dapm_widget *w,
 	struct snd_soc_codec *codec = snd_soc_dapm_to_codec(w->dapm);
 	struct msm_dig_priv *msm_dig_cdc = snd_soc_codec_get_drvdata(codec);
 
-	dev_dbg(codec->dev, "%s %d %s\n", __func__, event, w->name);
+	//dev_dbg(codec->dev, "%s %d %s\n", __func__, event, w->name);
 
 	if (w->shift >= MSM89XX_RX_MAX || w->shift < 0) {
 		dev_err(codec->dev, "%s: wrong RX index: %d\n",

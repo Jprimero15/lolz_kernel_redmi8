@@ -112,7 +112,7 @@ static char *aw87519_rcv_name = "aw87519_rcv.bin";
  ******************************************************************************/
 unsigned int aw87519_hw_on(struct aw87519 *aw87519)
 {
-    pr_info("%s enter\n", __func__);
+    pr_debug("%s enter\n", __func__);
 
     if (aw87519 && gpio_is_valid(aw87519->reset_gpio)) {
         gpio_set_value_cansleep(aw87519->reset_gpio, 0);
@@ -130,7 +130,7 @@ unsigned int aw87519_hw_on(struct aw87519 *aw87519)
 
 unsigned int aw87519_hw_off(struct aw87519 *aw87519)
 {
-    pr_info("%s enter\n", __func__);
+    pr_debug("%s enter\n", __func__);
 
     if (aw87519 && gpio_is_valid(aw87519->reset_gpio)) {
         gpio_set_value_cansleep(aw87519->reset_gpio, 0);
@@ -180,7 +180,7 @@ unsigned char aw87519_audio_speaker(void)
     unsigned int i;
     unsigned int length;
 
-    pr_info("%s enter\n", __func__);
+    pr_debug("%s enter\n", __func__);
 
     if(NULL == aw87519) {
         return 2;

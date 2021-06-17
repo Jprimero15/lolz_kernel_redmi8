@@ -55,9 +55,10 @@ static int msm_v4l2_open(struct file *filp)
 	trace_msm_v4l2_vidc_open_start("msm_v4l2_open start");
 	vidc_inst = msm_vidc_open(core->id, vid_dev->type);
 	if (!vidc_inst) {
-		dprintk(VIDC_ERR,
+		/*dprintk(VIDC_ERR,
 		"Failed to create video instance, core: %d, type = %d\n",
 		core->id, vid_dev->type);
+		*/
 		return -ENOMEM;
 	}
 	clear_bit(V4L2_FL_USES_V4L2_FH, &vdev->flags);

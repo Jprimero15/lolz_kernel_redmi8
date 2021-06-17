@@ -1808,8 +1808,6 @@ static int qg_psy_get_property(struct power_supply *psy,
 		if (!rc)
 			pval->intval = (int)temp;
 		*/
-
-		printk("POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:%d ", pval->intval);
 		break;
 	case POWER_SUPPLY_PROP_CYCLE_COUNTS:
 		rc = get_cycle_counts(chip->counter, &pval->strval);

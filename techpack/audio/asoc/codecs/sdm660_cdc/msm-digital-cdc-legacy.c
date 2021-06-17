@@ -255,9 +255,10 @@ static int msm_dig_cdc_codec_config_compander(struct snd_soc_codec *codec,
 	int comp_ch_bits_set = 0x03;
 	int comp_ch_value;
 
-	dev_err(codec->dev, "%s: event %d shift %d, enabled %d\n",
+	/*dev_err(codec->dev, "%s: event %d shift %d, enabled %d\n",
 		__func__, event, interp_n,
 		dig_cdc->comp_enabled[interp_n]);
+	*/
 
 	/* compander is invalid */
 	if (dig_cdc->comp_enabled[interp_n] != COMPANDER_1 &&
@@ -366,7 +367,7 @@ static int msm_dig_cdc_codec_enable_interpolator(struct snd_soc_dapm_widget *w,
 	struct snd_soc_codec *codec = snd_soc_dapm_to_codec(w->dapm);
 	struct msm_dig_priv *msm_dig_cdc = snd_soc_codec_get_drvdata(codec);
 
-	dev_err(codec->dev, "%s %d %s\n", __func__, event, w->name);
+	//dev_err(codec->dev, "%s %d %s\n", __func__, event, w->name);
 
 	if (w->shift >= MSM89XX_RX_MAX || w->shift < 0) {
 		dev_err(codec->dev, "%s: wrong RX index: %d\n",

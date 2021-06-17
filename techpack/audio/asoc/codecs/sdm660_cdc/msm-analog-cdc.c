@@ -2644,7 +2644,7 @@ static int msm_anlg_cdc_codec_enable_rx_bias(struct snd_soc_dapm_widget *w,
 	struct sdm660_cdc_priv *sdm660_cdc =
 					snd_soc_codec_get_drvdata(codec);
 
-	dev_err(codec->dev, "%s %d\n", __func__, event);
+	//dev_err(codec->dev, "%s %d\n", __func__, event);
 
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
