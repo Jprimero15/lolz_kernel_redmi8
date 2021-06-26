@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2017 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2019 The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -381,16 +381,6 @@ static void __schBeaconProcessForSession( tpAniSirGlobal      pMac,
                                          "Ignoring beacon!"),
                           psessionEntry->currentOperChannel, pBeacon->channelNumber);)
            goto fail;
-        }
-
-        if (psessionEntry->gLimSpecMgmt.dfs_channel_csa) {
-#ifdef WLAN_FEATURE_ROAM_SCAN_OFFLOAD
-            if (pMac->roam.configParam.isRoamOffloadScanEnabled) {
-               csrRoamOffloadScan(pMac, ROAM_SCAN_OFFLOAD_START, REASON_CONNECT);
-            }
-#endif
-           limFrameTransmissionControl(pMac, eLIM_TX_ALL, eLIM_RESUME_TX);
-           psessionEntry->gLimSpecMgmt.dfs_channel_csa = false;
         }
 
         if(RF_CHAN_14 >= psessionEntry->currentOperChannel)

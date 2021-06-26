@@ -727,7 +727,7 @@ eHalStatus sme_RrmIssueScanReq( tpAniSirGlobal pMac )
    {
        tCsrScanRequest scanRequest;
        v_U32_t scanId = 0;
-       tANI_U32 sessionId = 0;
+       tANI_U32 sessionId;
 #if defined WLAN_VOWIFI_DEBUG
    smsLog( pMac, LOGE, "Issue scan request " );
 #endif
@@ -790,13 +790,7 @@ eHalStatus sme_RrmIssueScanReq( tpAniSirGlobal pMac )
        /* set requestType to full scan */
        scanRequest.requestType = eCSR_SCAN_REQUEST_FULL_SCAN;
 
-       status = csrRoamGetSessionIdFromBSSID(pMac,
-                        (tCsrBssid*)pSmeRrmContext->sessionBssId, &sessionId );
-       if (!HAL_STATUS_SUCCESS(status)) {
-           smsLog( pMac, LOGE, FL("sessionId not found for Offload scan req"));
-           return status;
-       }
-
+       csrRoamGetSessionIdFromBSSID( pMac, (tCsrBssid*)pSmeRrmContext->sessionBssId, &sessionId );
        status = sme_ScanRequest( pMac, (tANI_U8)sessionId, &scanRequest, &scanId, &sme_RrmScanRequestCallback, NULL );
 
        if ( pSmeRrmContext->ssId.length )
@@ -1317,17 +1311,11 @@ eHalStatus sme_RrmMsgProcessor( tpAniSirGlobal pMac,  v_U16_t msg_type,
 void rrmIterMeasTimerHandle( v_PVOID_t userData )
 {
    tpAniSirGlobal pMac = (tpAniSirGlobal) userData;
-   eHalStatus status = eHAL_STATUS_FAILURE;
-
 #if defined WLAN_VOWIFI_DEBUG
    smsLog( pMac, LOGE, "Randomization timer expired...send on next channel ");
 #endif
     //Issue a scan req for next channel.
-    status = sme_AcquireGlobalLock(&pMac->sme);
-    if (HAL_STATUS_SUCCESS(status)) {
-        sme_RrmIssueScanReq(pMac);
-        sme_ReleaseGlobalLock(&pMac->sme);
-    }
+    sme_RrmIssueScanReq( pMac ); 
 }
 
 /* ---------------------------------------------------------------------------

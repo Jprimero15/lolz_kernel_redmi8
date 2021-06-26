@@ -3814,18 +3814,9 @@ VOS_STATUS csrNeighborRoamTransitToCFGChanScan(tpAniSirGlobal pMac)
     tpCsrChannelInfo    currChannelListInfo;
     tANI_U8   scanChannelList[WNI_CFG_VALID_CHANNEL_LIST_LEN];
     int       outputNumOfChannels = 0;
+#ifdef FEATURE_WLAN_LFR
     tANI_U32 sessionId = pNeighborRoamInfo->csrSessionId;
-    VOS_STATUS vos_status;
-
-    vos_status = WLANTL_updateSpoofMacAddr(pMac->roam.gVosContext,
-                  (v_MACADDR_t*)&pMac->roam.spoof_mac_addr,
-                  (v_MACADDR_t*)&pMac->roam.roamSession[sessionId].selfMacAddr);
-    if (vos_status != VOS_STATUS_SUCCESS)
-    {
-        smsLog(pMac, LOGE, FL("Failed to update MAC Spoof Addr in TL"));
-        return vos_status;
-    }
-
+#endif
     currChannelListInfo = &pNeighborRoamInfo->roamChannelInfo.currentChannelListInfo;
 
     if ( 

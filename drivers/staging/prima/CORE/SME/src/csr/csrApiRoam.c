@@ -112,20 +112,6 @@
 static tANI_BOOLEAN bRoamScanOffloadStarted = VOS_FALSE;
 #endif
 
-#define MAX_PWR_FCC_CHAN_12 8
-#define MAX_PWR_FCC_CHAN_13 2
-
-#define LE_READ_4(p) \
-        ((uint32_t)\
-        ((((const uint8_t *)(p))[0]) |\
-        (((const uint8_t *)(p))[1] <<  8) |  \
-        (((const uint8_t *)(p))[2] << 16) |\
-        (((const uint8_t *)(p))[3] << 24)))
-
-#define RSN_OUI                         0xac0f00
-#define RSN_SEL(x)                      (((x)<<24)|RSN_OUI)
-#define AKM_SUITE_TYPE_SAE              0x08
-#define RSN_AUTH_KEY_MGMT_SAE           RSN_SEL(AKM_SUITE_TYPE_SAE)
 
 /*-------------------------------------------------------------------------- 
   Static Type declarations
@@ -663,21 +649,6 @@ eHalStatus csrUpdateChannelList(tpAniSirGlobal pMac)
         pChanList->chanParam[num_channel].pwr =
           cfgGetRegulatoryMaxTransmitPower(pMac,
                                            pScan->defaultPowerTable[i].chanId);
-        if (pMac->scan.fcc_constraint)
-        {
-            if (pChanList->chanParam[num_channel].chanId == 12)
-            {
-                pChanList->chanParam[num_channel].pwr = MAX_PWR_FCC_CHAN_12;
-                smsLog(pMac, LOG1,
-                      "fcc_constraint is set, txpower for channel 12 is 8db ");
-            }
-            if (pChanList->chanParam[num_channel].chanId == 13)
-            {
-                pChanList->chanParam[num_channel].pwr = MAX_PWR_FCC_CHAN_13;
-                smsLog(pMac, LOG1,
-                      "fcc_constraint is set, txpower for channel 13 is 2db ");
-            }
-        }
 
         if (!pChanList->chanParam[num_channel].pwr)
         {
@@ -993,7 +964,6 @@ eHalStatus csrRoamCopyConnectProfile(tpAniSirGlobal pMac, tANI_U32 sessionId, tC
                     pProfile->pBssDesc = NULL;
                 }
                 pProfile->AuthType = pSession->connectedProfile.AuthType;
-                pProfile->akm_list = pSession->connectedProfile.akm_list;
                 pProfile->EncryptionType = pSession->connectedProfile.EncryptionType;
                 pProfile->mcEncryptionType = pSession->connectedProfile.mcEncryptionType;
                 pProfile->BSSType = pSession->connectedProfile.BSSType;
@@ -4681,7 +4651,7 @@ static eCsrJoinState csrRoamJoinNextBss( tpAniSirGlobal pMac, tSmeCmd *pCommand,
     eCsrJoinState eRoamState = eCsrStopRoaming;
     tScanResultList *pBSSList = (tScanResultList *)pCommand->u.roamCmd.hBSSList;
     tANI_BOOLEAN fDone = eANI_BOOLEAN_FALSE;
-    tCsrRoamInfo *roamInfo, *pRoamInfo = NULL;
+    tCsrRoamInfo roamInfo, *pRoamInfo = NULL;
 #ifndef WLAN_MDM_CODE_REDUCTION_OPT
     v_U8_t acm_mask = 0;
 #endif 
@@ -4695,21 +4665,14 @@ static eCsrJoinState csrRoamJoinNextBss( tpAniSirGlobal pMac, tSmeCmd *pCommand,
         smsLog(pMac, LOGE, FL("  session %d not found "), sessionId);
         return (eCsrStopRoaming);
     }
-
-    roamInfo = vos_mem_malloc(sizeof(tCsrRoamInfo));
-    if (!roamInfo) {
-        smsLog(pMac, LOGE, FL("roamInfo empty"));
-        return (eCsrStopRoaming);
-    }
-
+    
     do  
     {
         // Check for Cardbus eject condition, before trying to Roam to any BSS
         //***if( !balIsCardPresent(pAdapter) ) break;
         
-        vos_mem_copy (roamInfo->bssid, &pSession->joinFailStatusCode.bssId,
-                      sizeof(tSirMacAddr));
-
+        vos_mem_set(&roamInfo, sizeof(roamInfo), 0);
+        vos_mem_copy (&roamInfo.bssid, &pSession->joinFailStatusCode.bssId, sizeof(tSirMacAddr));
         if(NULL != pBSSList)
         {
             // When handling AP's capability change, continue to associate to
@@ -4734,13 +4697,11 @@ static eCsrJoinState csrRoamJoinNextBss( tpAniSirGlobal pMac, tSmeCmd *pCommand,
                     else
                     {
                         //We need to indicate to HDD that we are done with this one.
-                        //this shall not be NULL
-                        roamInfo->pBssDesc = pCommand->u.roamCmd.pLastRoamBss;
-                        roamInfo->statusCode =
-                                     pSession->joinFailStatusCode.statusCode;
-                        roamInfo->reasonCode =
-                                     pSession->joinFailStatusCode.reasonCode;
-                        pRoamInfo = roamInfo;
+                        //vos_mem_set(&roamInfo, sizeof(tCsrRoamInfo), 0);
+                        roamInfo.pBssDesc = pCommand->u.roamCmd.pLastRoamBss;     //this shall not be NULL
+                        roamInfo.statusCode = pSession->joinFailStatusCode.statusCode;
+                        roamInfo.reasonCode = pSession->joinFailStatusCode.reasonCode;
+                        pRoamInfo = &roamInfo;
                     }
                 }
                 while(pCommand->u.roamCmd.pRoamBssEntry)
@@ -4825,7 +4786,7 @@ static eCsrJoinState csrRoamJoinNextBss( tpAniSirGlobal pMac, tSmeCmd *pCommand,
                 csrSetAbortRoamingCommand(pMac, pCommand);
                 break;
             }
-            vos_mem_set(roamInfo, sizeof(roamInfo), 0);
+            vos_mem_set(&roamInfo, sizeof(roamInfo), 0);
             if(pScanResult)
             {
                 tDot11fBeaconIEs *pIesLocal = (tDot11fBeaconIEs *)pScanResult->Result.pvIes;
@@ -4836,8 +4797,8 @@ static eCsrJoinState csrRoamJoinNextBss( tpAniSirGlobal pMac, tSmeCmd *pCommand,
                     eRoamState = eCsrStopRoaming;
                     break;
                 }
-                roamInfo->pBssDesc = &pScanResult->Result.BssDescriptor;
-                pCommand->u.roamCmd.pLastRoamBss = roamInfo->pBssDesc;
+                roamInfo.pBssDesc = &pScanResult->Result.BssDescriptor;
+                pCommand->u.roamCmd.pLastRoamBss = roamInfo.pBssDesc;
                 //No need to put uapsd_mask in if the BSS doesn't support uAPSD
                 if( pCommand->u.roamCmd.roamProfile.uapsd_mask &&
                     CSR_IS_QOS_BSS(pIesLocal) &&
@@ -4861,12 +4822,10 @@ static eCsrJoinState csrRoamJoinNextBss( tpAniSirGlobal pMac, tSmeCmd *pCommand,
             {
                 pCommand->u.roamCmd.roamProfile.uapsd_mask = 0;
             }
-            roamInfo->pProfile = pProfile;
+            roamInfo.pProfile = pProfile;
             pSession->bRefAssocStartCnt++;
-            csrRoamCallCallback(pMac, sessionId, roamInfo,
-                                pCommand->u.roamCmd.roamId,
-                                eCSR_ROAM_ASSOCIATION_START,
-                                eCSR_ROAM_RESULT_NONE );
+            csrRoamCallCallback( pMac, sessionId, &roamInfo, pCommand->u.roamCmd.roamId, 
+                                 eCSR_ROAM_ASSOCIATION_START, eCSR_ROAM_RESULT_NONE );
         }
         if ( NULL == pCommand->u.roamCmd.pRoamBssEntry ) 
         {
@@ -4970,14 +4929,13 @@ static eCsrJoinState csrRoamJoinNextBss( tpAniSirGlobal pMac, tSmeCmd *pCommand,
         {
             pSession->bRefAssocStartCnt--;
             //Complete the last association attemp because a new one is about to be tried
-            pRoamInfo = roamInfo;
+            pRoamInfo = &roamInfo;
             csrRoamCallCallback(pMac, sessionId, pRoamInfo, pCommand->u.roamCmd.roamId, 
                                         eCSR_ROAM_ASSOCIATION_COMPLETION, 
                                         eCSR_ROAM_RESULT_NOT_ASSOCIATED);
         }
     }
 
-    vos_mem_free(roamInfo);
     return( eRoamState );
 }
 
@@ -5100,7 +5058,7 @@ eHalStatus csrProcessFTReassocRoamCommand ( tpAniSirGlobal pMac, tSmeCmd *pComma
 eHalStatus csrRoamProcessCommand( tpAniSirGlobal pMac, tSmeCmd *pCommand )
 {
     eHalStatus status = eHAL_STATUS_SUCCESS;
-    tCsrRoamInfo *roamInfo;
+    tCsrRoamInfo roamInfo;
     tANI_U32 sessionId = pCommand->sessionId;
     tCsrRoamSession *pSession = CSR_GET_SESSION( pMac, sessionId );
 
@@ -5109,7 +5067,6 @@ eHalStatus csrRoamProcessCommand( tpAniSirGlobal pMac, tSmeCmd *pCommand )
         smsLog(pMac, LOGE, FL("  session %d not found "), sessionId);
         return eHAL_STATUS_FAILURE;
     }
-
     smsLog(pMac, LOG1, FL("Roam Reason : %d, sessionId: %d"),
                          pCommand->u.roamCmd.roamReason, sessionId);
     switch ( pCommand->u.roamCmd.roamReason )
@@ -5149,24 +5106,15 @@ eHalStatus csrRoamProcessCommand( tpAniSirGlobal pMac, tSmeCmd *pCommand )
             }
             else
             {
-                roamInfo = vos_mem_malloc(sizeof(tCsrRoamInfo));
-                if (!roamInfo) {
-                   smsLog(pMac, LOGE, FL("roamInfo empty"));
-                   return eHAL_STATUS_FAILURE;
-                }
-
-                roamInfo->reasonCode = eCsrRoamReasonStaCapabilityChanged;
-                csrRoamCallCallback(pMac, pSession->sessionId, roamInfo, 0,
-                                    eCSR_ROAM_ROAMING_START,
-                                    eCSR_ROAM_RESULT_NONE);
+                roamInfo.reasonCode = eCsrRoamReasonStaCapabilityChanged;
+                csrRoamCallCallback(pMac, pSession->sessionId, &roamInfo, 0, eCSR_ROAM_ROAMING_START, eCSR_ROAM_RESULT_NONE);
                 pSession->roamingReason = eCsrReassocRoaming;
-                roamInfo->pBssDesc = pSession->pConnectBssDesc;
-                roamInfo->pProfile = &pCommand->u.roamCmd.roamProfile;
+                roamInfo.pBssDesc = pSession->pConnectBssDesc;
+                roamInfo.pProfile = &pCommand->u.roamCmd.roamProfile;
                 pSession->bRefAssocStartCnt++;
-                csrRoamCallCallback(pMac, sessionId, roamInfo, pCommand->u.roamCmd.roamId,
+                csrRoamCallCallback( pMac, sessionId, &roamInfo, pCommand->u.roamCmd.roamId, 
                                      eCSR_ROAM_ASSOCIATION_START, eCSR_ROAM_RESULT_NONE );
    
-                vos_mem_free(roamInfo);
                 smsLog(pMac, LOG1, FL("  calling csrRoamIssueReassociate"));
                 status = csrRoamIssueReassociate( pMac, sessionId, pSession->pConnectBssDesc, pIes,
                                                   &pCommand->u.roamCmd.roamProfile );
@@ -5259,7 +5207,6 @@ eHalStatus csrRoamProcessCommand( tpAniSirGlobal pMac, tSmeCmd *pCommand )
         }
         break;
     }
-
     return (status);
 }
 
@@ -6733,7 +6680,6 @@ eHalStatus csrRoamCopyProfile(tpAniSirGlobal pMac, tCsrRoamProfile *pDstProfile,
                          pSrcProfile->ChannelInfo.numOfChannels);
         }
         pDstProfile->AuthType = pSrcProfile->AuthType;
-        pDstProfile->akm_list = pSrcProfile->akm_list;
         pDstProfile->EncryptionType = pSrcProfile->EncryptionType;
         pDstProfile->mcEncryptionType = pSrcProfile->mcEncryptionType;
         pDstProfile->negotiatedUCEncryptionType = pSrcProfile->negotiatedUCEncryptionType;
@@ -6876,7 +6822,6 @@ eHalStatus csrRoamCopyConnectedProfile(tpAniSirGlobal pMac, tANI_U32 sessionId, 
         pDstProfile->AuthType.numEntries = 1;
         pDstProfile->AuthType.authType[0] = pSrcProfile->AuthType;
         pDstProfile->negotiatedAuthType = pSrcProfile->AuthType;
-        pDstProfile->akm_list = pSrcProfile->akm_list;
         pDstProfile->EncryptionType.numEntries = 1;
         pDstProfile->EncryptionType.encryptionType[0] = pSrcProfile->EncryptionType;
         pDstProfile->negotiatedUCEncryptionType = pSrcProfile->EncryptionType;
@@ -7836,7 +7781,6 @@ eHalStatus csrRoamSaveConnectedInfomation(tpAniSirGlobal pMac, tANI_U32 sessionI
     vos_mem_set(&pSession->connectedProfile, sizeof(tCsrRoamConnectedProfile), 0);
     pConnectProfile->AuthType = pProfile->negotiatedAuthType;
         pConnectProfile->AuthInfo = pProfile->AuthType;
-    pConnectProfile->akm_list = pProfile->akm_list;
     pConnectProfile->CBMode = pProfile->CBMode;  //*** this may not be valid
     pConnectProfile->EncryptionType = pProfile->negotiatedUCEncryptionType;
         pConnectProfile->EncryptionInfo = pProfile->EncryptionType;
@@ -8731,7 +8675,7 @@ void csrRoamRoamingStateDisassocRspProcessor( tpAniSirGlobal pMac, tSirSmeDisass
     tScanResultHandle hBSSList;
     tANI_BOOLEAN fCallCallback, fRemoveCmd;
     eHalStatus status;
-    tCsrRoamInfo *roamInfo;
+    tCsrRoamInfo roamInfo;
     tCsrScanResultFilter *pScanFilter = NULL;
     tANI_U32 roamId = 0;
     tCsrRoamProfile *pCurRoamProfile = NULL;
@@ -8740,19 +8684,13 @@ void csrRoamRoamingStateDisassocRspProcessor( tpAniSirGlobal pMac, tSirSmeDisass
 #endif
     tANI_U32 sessionId;
     tCsrRoamSession *pSession = NULL;
-    tSirSmeDisassocRsp *SmeDisassocRsp = NULL;
 
-    SmeDisassocRsp = vos_mem_malloc(sizeof(tSirSmeDisassocRsp));
-    if (!SmeDisassocRsp) {
-	   smsLog(pMac, LOGE, FL("SmeDisassocRsp empty"));
-           return;
-    }
+    tSirSmeDisassocRsp SmeDisassocRsp;
 
-    csrSerDesUnpackDiassocRsp((tANI_U8 *)pSmeRsp, SmeDisassocRsp);
-    sessionId = SmeDisassocRsp->sessionId;
-    statusCode = SmeDisassocRsp->statusCode;
+    csrSerDesUnpackDiassocRsp((tANI_U8 *)pSmeRsp, &SmeDisassocRsp);
+    sessionId = SmeDisassocRsp.sessionId;
+    statusCode = SmeDisassocRsp.statusCode;
 
-    vos_mem_free(SmeDisassocRsp);
     smsLog( pMac, LOG2, "csrRoamRoamingStateDisassocRspProcessor sessionId %d", sessionId);
 
     if ( csrIsConnStateInfra( pMac, sessionId ) )
@@ -8766,7 +8704,7 @@ void csrRoamRoamingStateDisassocRspProcessor( tpAniSirGlobal pMac, tSirSmeDisass
         smsLog(pMac, LOGE, FL("  session %d not found "), sessionId);
         return;
     }
-
+    
     if ( CSR_IS_ROAM_SUBSTATE_DISASSOC_NO_JOIN( pMac, sessionId ) )
     {
         smsLog( pMac, LOG2, "***eCsrNothingToJoin***");
@@ -8868,22 +8806,15 @@ void csrRoamRoamingStateDisassocRspProcessor( tpAniSirGlobal pMac, tSirSmeDisass
             smsLog( pMac, LOGE, "%s: NO commands are active", __func__ );
         }
 
-        roamInfo = vos_mem_malloc(sizeof(tCsrRoamInfo));
-        if (!roamInfo) {
-          smsLog(pMac, LOGE, FL("roamInfo empty"));
-          goto POST_ROAM_FAILURE;
-        }
         /* Notify HDD about handoff and provide the BSSID too */
-        roamInfo->reasonCode = eCsrRoamReasonBetterAP;
+        roamInfo.reasonCode = eCsrRoamReasonBetterAP;
 
-        vos_mem_copy(roamInfo->bssid,
+        vos_mem_copy(roamInfo.bssid,
                      pMac->roam.neighborRoamInfo.csrNeighborRoamProfile.BSSIDs.bssid,
                      sizeof(tSirMacAddr));
 
-        csrRoamCallCallback(pMac, sessionId, roamInfo, 0,
-                            eCSR_ROAM_ROAMING_START, eCSR_ROAM_RESULT_NONE);
-
-        vos_mem_free(roamInfo);
+        csrRoamCallCallback(pMac,sessionId, &roamInfo, 0, 
+            eCSR_ROAM_ROAMING_START, eCSR_ROAM_RESULT_NONE);
 
         /* Copy the connected profile to apply the same for this connection as well */
         pCurRoamProfile = vos_mem_malloc(sizeof(tCsrRoamProfile));
@@ -8922,17 +8853,11 @@ POST_ROAM_FAILURE:
         if (pCurRoamProfile)
             vos_mem_free(pCurRoamProfile);
 
-        roamInfo = vos_mem_malloc(sizeof(tCsrRoamInfo));
-        if (!roamInfo) {
-          smsLog(pMac, LOGE, FL("roamInfo empty"));
-          return;
-        }
-
         /* Inform the upper layers that the reassoc failed */
-        csrRoamCallCallback(pMac, sessionId, roamInfo, 0,
-                            eCSR_ROAM_FT_REASSOC_FAILED, eSIR_SME_SUCCESS);
+        vos_mem_zero(&roamInfo, sizeof(tCsrRoamInfo));
+        csrRoamCallCallback(pMac, sessionId,
+                &roamInfo, 0, eCSR_ROAM_FT_REASSOC_FAILED, eSIR_SME_SUCCESS);
 
-        vos_mem_free(roamInfo);
         /* 
          * Issue a disassoc request so that PE/LIM uses this to clean-up the FT session.
          * Upon success, we would re-enter this routine after receiving the disassoc
@@ -9034,7 +8959,7 @@ void csrRoamingStateMsgProcessor( tpAniSirGlobal pMac, void *pMsgBuf )
 {
     tSirSmeRsp *pSmeRsp;
     tSmeIbssPeerInd *pIbssPeerInd;
-    tCsrRoamInfo *roamInfo;
+    tCsrRoamInfo roamInfo;
         // TODO Session Id need to be acquired in this function
         tANI_U32 sessionId = 0;
     pSmeRsp = (tSirSmeRsp *)pMsgBuf;
@@ -9121,35 +9046,26 @@ void csrRoamingStateMsgProcessor( tpAniSirGlobal pMac, void *pMsgBuf )
         case eWNI_SME_IBSS_PEER_DEPARTED_IND:
             pIbssPeerInd = (tSmeIbssPeerInd*)pSmeRsp;
             smsLog(pMac, LOGE, "CSR: Peer departed notification from LIM in joining state");
-            roamInfo = vos_mem_malloc(sizeof(tCsrRoamInfo));
-            if (!roamInfo) {
-                   smsLog(pMac, LOGE, FL("roamInfo empty"));
-                   return;
-            }
-            roamInfo->staId = (tANI_U8)pIbssPeerInd->staId;
-            roamInfo->ucastSig = (tANI_U8)pIbssPeerInd->ucastSig;
-            roamInfo->bcastSig = (tANI_U8)pIbssPeerInd->bcastSig;
-            vos_mem_copy(roamInfo->peerMac, pIbssPeerInd->peerAddr,
+            vos_mem_set(&roamInfo, sizeof(tCsrRoamInfo), 0);
+            roamInfo.staId = (tANI_U8)pIbssPeerInd->staId;
+            roamInfo.ucastSig = (tANI_U8)pIbssPeerInd->ucastSig;
+            roamInfo.bcastSig = (tANI_U8)pIbssPeerInd->bcastSig;
+            vos_mem_copy(&roamInfo.peerMac, pIbssPeerInd->peerAddr,
                          sizeof(tCsrBssid));
-            csrRoamCallCallback(pMac, sessionId, roamInfo, 0,
+            csrRoamCallCallback(pMac, sessionId, &roamInfo, 0, 
                                 eCSR_ROAM_CONNECT_STATUS_UPDATE, 
                                 eCSR_ROAM_RESULT_IBSS_PEER_DEPARTED);
-            vos_mem_free(roamInfo);
             break;
         case eWNI_SME_LOST_LINK_PARAMS_IND:
             {
                 tpSirSmeLostLinkParamsInd pLostLinkParamsInd = (tpSirSmeLostLinkParamsInd)pSmeRsp;
+                tCsrRoamInfo roamInfo, *pRoamInfo = NULL;
                 eCsrRoamResult result = eCSR_ROAM_RESULT_NONE;
-                roamInfo = vos_mem_malloc(sizeof(tCsrRoamInfo));
-                if (!roamInfo) {
-                     smsLog(pMac, LOGE, FL("roamInfo empty"));
-                     return;
-                }
-                roamInfo->u.pLostLinkParams = &pLostLinkParamsInd->info;
+                vos_mem_set(&roamInfo, sizeof(tCsrRoamInfo), 0);
+                roamInfo.u.pLostLinkParams = &pLostLinkParamsInd->info;
+                pRoamInfo = &roamInfo;
                 csrRoamCallCallback(pMac, pLostLinkParamsInd->sessionId,
-                                    roamInfo, 0, eCSR_ROAM_LOST_LINK_PARAMS_IND,
-                                    result);
-                vos_mem_free(roamInfo);
+                               pRoamInfo, 0, eCSR_ROAM_LOST_LINK_PARAMS_IND, result);
                 break;
             }
         case eWNI_SME_TRIGGER_SAE:
@@ -9200,8 +9116,6 @@ void csrRoamJoinedStateMsgProcessor( tpAniSirGlobal pMac, void *pMsgBuf )
             if(!pSession)
             {
                 smsLog(pMac, LOGE, FL("  session %d not found "), sessionId);
-                if (pUpperLayerAssocCnf->ies)
-                    vos_mem_free(pUpperLayerAssocCnf->ies);
                 return;
             }
             
@@ -9233,14 +9147,6 @@ void csrRoamJoinedStateMsgProcessor( tpAniSirGlobal pMac, void *pMsgBuf )
 
             if(CSR_IS_INFRA_AP(pRoamInfo->u.pConnectedProfile) )
             {
-
-                if (pUpperLayerAssocCnf->ies_len > 0) {
-                    pRoamInfo->assocReqLength =
-                        pUpperLayerAssocCnf->ies_len;
-                    pRoamInfo->assocReqPtr =
-                        pUpperLayerAssocCnf->ies;
-                }
-
                 pMac->roam.roamSession[sessionId].connectState = eCSR_ASSOC_STATE_TYPE_INFRA_CONNECTED;
                 pRoamInfo->fReassocReq = pUpperLayerAssocCnf->reassocReq;
                 status = csrRoamCallCallback(pMac, sessionId, pRoamInfo, 0, eCSR_ROAM_INFRA_IND, eCSR_ROAM_RESULT_INFRA_ASSOCIATION_CNF);
@@ -9252,8 +9158,6 @@ void csrRoamJoinedStateMsgProcessor( tpAniSirGlobal pMac, void *pMsgBuf )
                 status = csrRoamCallCallback(pMac, sessionId, pRoamInfo, 0, eCSR_ROAM_WDS_IND, eCSR_ROAM_RESULT_WDS_ASSOCIATION_IND);//Sta
             }
 
-            if (pUpperLayerAssocCnf->ies)
-                vos_mem_free(pUpperLayerAssocCnf->ies);
         }
         break;
        default:
@@ -10151,114 +10055,6 @@ eHalStatus csrSendResetApCapsChanged(tpAniSirGlobal pMac, tSirMacAddr *bssId)
     return status;
 }
 
-static bool csr_is_sae_akm_present(tpAniSirGlobal mac,
-                                tDot11fIERSN * const rsn_ie)
-{
-    uint16_t i;
-
-    if (rsn_ie->akm_suite_cnt > 4) {
-        smsLog(mac, LOGE, FL("Invalid akm_suite_cnt in Rx RSN IE"));
-        return false;
-    }
-
-    for (i = 0; i < rsn_ie->akm_suite_cnt; i++) {
-        if (LE_READ_4(rsn_ie->akm_suite[i]) == RSN_AUTH_KEY_MGMT_SAE) {
-            smsLog(mac, LOG1, FL("SAE AKM present"));
-            return true;
-        }
-    }
-
-    return false;
-}
-
-static bool csr_is_sae_peer_allowed(tpAniSirGlobal mac,
-                                    tSirSmeAssocInd *assoc_ind,
-                                    tCsrRoamSession *session,
-                                    tSirMacAddr peer_mac_addr,
-                                    tDot11fIERSN *rsn_ie,
-                                    tSirMacStatusCodes *mac_status_code)
-{
-    bool is_allowed = false;
-
-    /* Allow the peer if it's SAE authenticated */
-    if (assoc_ind->is_sae_authenticated)
-        return true;
-
-    /* Allow the peer with valid PMKID */
-    if (!rsn_ie->pmkid_count) {
-        *mac_status_code = eSIR_MAC_AUTH_ALGO_NOT_SUPPORTED_STATUS;
-        smsLog(mac, LOGE,
-            FL("No PMKID present in RSNIE; Tried to use SAE AKM after non-SAE authentication"));
-    } else if (csr_is_pmkid_found_for_peer(mac, session, peer_mac_addr,
-                &rsn_ie->pmkid[0][0],
-                rsn_ie->pmkid_count)) {
-                smsLog(mac, LOG1, FL("Valid PMKID found for SAE peer"));
-                is_allowed = true;
-    } else {
-            *mac_status_code = eSIR_MAC_INVALID_PMKID;
-            smsLog(mac, LOG1, FL("No valid PMKID found for SAE peer"));
-    }
-
-    return is_allowed;
-}
-
-static eCsrAuthType csr_translate_akm_type(enum ani_akm_type akm_type)
-{
-    eCsrAuthType csr_akm_type;
-
-    switch (akm_type)
-    {
-        case ANI_AKM_TYPE_NONE:
-                csr_akm_type = eCSR_AUTH_TYPE_NONE;
-                break;
-#ifdef WLAN_FEATURE_SAE
-        case ANI_AKM_TYPE_SAE:
-                csr_akm_type = eCSR_AUTH_TYPE_SAE;
-                break;
-#endif
-        case ANI_AKM_TYPE_WPA:
-                csr_akm_type = eCSR_AUTH_TYPE_WPA;
-                break;
-        case ANI_AKM_TYPE_WPA_PSK:
-                csr_akm_type = eCSR_AUTH_TYPE_WPA_PSK;
-                break;
-        case ANI_AKM_TYPE_RSN:
-                csr_akm_type = eCSR_AUTH_TYPE_RSN;
-                break;
-        case ANI_AKM_TYPE_RSN_PSK:
-                csr_akm_type = eCSR_AUTH_TYPE_RSN_PSK;
-                break;
-#if defined WLAN_FEATURE_VOWIFI_11R
-        case ANI_AKM_TYPE_FT_RSN:
-                csr_akm_type = eCSR_AUTH_TYPE_FT_RSN;
-                break;
-        case ANI_AKM_TYPE_FT_RSN_PSK:
-                csr_akm_type = eCSR_AUTH_TYPE_FT_RSN_PSK;
-                break;
-#endif
-#ifdef FEATURE_WLAN_ESE
-        case ANI_AKM_TYPE_CCKM:
-                csr_akm_type = eCSR_AUTH_TYPE_CCKM_RSN;
-                break;
-#endif
-#ifdef WLAN_FEATURE_11W
-        case ANI_AKM_TYPE_RSN_PSK_SHA256:
-                csr_akm_type = eCSR_AUTH_TYPE_RSN_PSK_SHA256;
-                break;
-        case ANI_AKM_TYPE_RSN_8021X_SHA256:
-                csr_akm_type = eCSR_AUTH_TYPE_RSN_8021X_SHA256;
-                break;
-#endif
-        case ANI_AKM_TYPE_OWE:
-                csr_akm_type = eCSR_AUTH_TYPE_OWE;
-                break;
-        default:
-                csr_akm_type = eCSR_AUTH_TYPE_UNKNOWN;
-        }
-
-        return csr_akm_type;
-}
-
 void csrRoamCheckForLinkStatusChange( tpAniSirGlobal pMac, tSirSmeRsp *pSirMsg )
 {
     tSirSmeAssocInd *pAssocInd;
@@ -10279,9 +10075,6 @@ void csrRoamCheckForLinkStatusChange( tpAniSirGlobal pMac, tSirSmeRsp *pSirMsg )
     tCsrRoamSession *pSession = NULL;
     tpSirSmeSwitchChannelInd pSwitchChnInd;
     tSmeMaxAssocInd *pSmeMaxAssocInd;
-    tSirMacStatusCodes mac_status_code = eSIR_MAC_SUCCESS_STATUS;
-    eCsrAuthType csr_akm_type;
-
     vos_mem_set(&roamInfo, sizeof(roamInfo), 0);
 
 
@@ -10309,7 +10102,6 @@ void csrRoamCheckForLinkStatusChange( tpAniSirGlobal pMac, tSirSmeRsp *pSirMsg )
 
                 pRoamInfo = &roamInfo;
 
-                csr_akm_type = csr_translate_akm_type(pAssocInd->akm_type);
                 // Required for indicating the frames to upper layer
                 pRoamInfo->assocReqLength = pAssocInd->assocReqLength;
                 pRoamInfo->assocReqPtr = pAssocInd->assocReqPtr;
@@ -10366,35 +10158,12 @@ void csrRoamCheckForLinkStatusChange( tpAniSirGlobal pMac, tSirSmeRsp *pSirMsg )
                         }
 #endif
                         status = csrRoamCallCallback(pMac, sessionId, pRoamInfo, 0, eCSR_ROAM_INFRA_IND, eCSR_ROAM_RESULT_INFRA_ASSOCIATION_IND);
-                        if (!HAL_STATUS_SUCCESS(status)) {
-                            pRoamInfo->statusCode = eSIR_SME_ASSOC_REFUSED;// Refused due to Mac filtering
-                        } else if (pAssocInd->rsnIE.length && SIR_MAC_RSN_EID ==
-                                   pAssocInd->rsnIE.rsnIEdata[0]) {
-                            tDot11fIERSN rsn_ie = {0};
-
-                            if (dot11fUnpackIeRSN(
-                                pMac,
-                                pAssocInd->rsnIE.rsnIEdata + 2,
-                                pAssocInd->rsnIE.length - 2,
-                                &rsn_ie)
-                                != DOT11F_PARSE_SUCCESS ||
-                                (csr_is_sae_akm_present(pMac, &rsn_ie) &&
-                                !csr_is_sae_peer_allowed(pMac, pAssocInd,
-                                pSession, pAssocInd->peerMacAddr, &rsn_ie,
-                                &mac_status_code))) {
-                                    status = eHAL_STATUS_INVALID_PARAMETER;
-                                    pRoamInfo->statusCode =
-                                        eSIR_SME_ASSOC_REFUSED;
-                                    smsLog(pMac, LOGE,
-                                        FL("SAE peer not allowed: Status: %d"),
-                                        mac_status_code);
-                            }
-                        }
+                        if (!HAL_STATUS_SUCCESS(status))
+                            pRoamInfo->statusCode = eSIR_SME_ASSOC_REFUSED;// Refused due to Mac filtering 
                     }
                     /* Send Association completion message to PE */
-                    status = csrSendAssocCnfMsg(pMac, pAssocInd, status,
-                                                mac_status_code);//Sta
-
+                    status = csrSendAssocCnfMsg( pMac, pAssocInd, status );//Sta
+                    
                     /* send a message to CSR itself just to avoid the EAPOL frames going
                      * OTA before association response */
                     if(CSR_IS_WDS_AP( pRoamInfo->u.pConnectedProfile))
@@ -15628,9 +15397,7 @@ eHalStatus csrSendMBDeauthCnfMsg( tpAniSirGlobal pMac, tpSirSmeDeauthInd pDeauth
     } while( 0 );
     return( status );
 }
-eHalStatus csrSendAssocCnfMsg( tpAniSirGlobal pMac, tpSirSmeAssocInd pAssocInd,
-                               eHalStatus Halstatus,
-                               tSirMacStatusCodes mac_status_code )
+eHalStatus csrSendAssocCnfMsg( tpAniSirGlobal pMac, tpSirSmeAssocInd pAssocInd, eHalStatus Halstatus )
 {
     eHalStatus status = eHAL_STATUS_SUCCESS;
     tSirSmeAssocCnf *pMsg;
@@ -15653,12 +15420,10 @@ eHalStatus csrSendAssocCnfMsg( tpAniSirGlobal pMac, tpSirSmeAssocInd pAssocInd,
                 pMsg->messageType = pal_cpu_to_be16((tANI_U16)eWNI_SME_ASSOC_CNF);
                 pMsg->length = pal_cpu_to_be16((tANI_U16)sizeof( tSirSmeAssocCnf ));
         pBuf = (tANI_U8 *)&pMsg->statusCode;
-        if (HAL_STATUS_SUCCESS(Halstatus)) {
+        if(HAL_STATUS_SUCCESS(Halstatus))
             statusCode = (tSirResultCodes)pal_cpu_to_be32(eSIR_SME_SUCCESS);
-        } else {
+        else
             statusCode = (tSirResultCodes)pal_cpu_to_be32(eSIR_SME_ASSOC_REFUSED);
-            pMsg->mac_status_code = mac_status_code;
-        }
         vos_mem_copy(pBuf, &statusCode, sizeof(tSirResultCodes));
         pBuf += sizeof(tSirResultCodes);
         // bssId
@@ -15773,20 +15538,6 @@ eHalStatus csrSendAssocIndToUpperLayerCnfMsg(   tpAniSirGlobal pMac,
     if (pAssocInd->VHTCaps.present) {
         pBuf = (tANI_U8 *)&pMsg->VHTCaps;
         vos_mem_copy(pBuf, &pAssocInd->VHTCaps, sizeof(pMsg->VHTCaps));
-    }
-
-    if (pAssocInd->assocReqPtr) {
-        if (pAssocInd->assocReqLength < MAX_ASSOC_REQ_IE_LEN) {
-            pMsg->ies = vos_mem_malloc(pAssocInd->assocReqLength);
-            if (!pMsg->ies) {
-                vos_mem_free(pMsg);
-                return eHAL_STATUS_FAILED_ALLOC;
-            }
-            pMsg->ies_len = pAssocInd->assocReqLength;
-            vos_mem_copy(pMsg->ies, pAssocInd->assocReqPtr, pMsg->ies_len);
-        } else {
-            smsLog(pMac, LOGE, FL("Assoc Ie length is too long"));
-        }
     }
 
         msgQ.type = eWNI_SME_UPPER_LAYER_ASSOC_CNF;
@@ -19164,11 +18915,6 @@ eHalStatus csrIsFullPowerNeeded( tpAniSirGlobal pMac, tSmeCmd *pCommand,
         else if (eSmeCommandDelStaSession == pCommand->command)
         {
             //need full power for all
-            fNeedFullPower = eANI_BOOLEAN_TRUE;
-        }
-
-        else if (pCommand->command == eSmeCommandOlpcMode)
-        {
             fNeedFullPower = eANI_BOOLEAN_TRUE;
         }
 

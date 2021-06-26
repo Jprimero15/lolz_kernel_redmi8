@@ -1112,7 +1112,6 @@ tSirRetStatus uMacPostCtrlMsg(void* pSirGlobal, tSirMbMsg* pMb);
 #define WDA_BEACON_FILTER_IND          SIR_HAL_BEACON_FILTER_IND
 #define WDA_VOWIFI_MODE                SIR_HAL_VOWIFI_MODE
 #define WDA_QPOWER                     SIR_HAL_QPOWER
-#define WDA_LOW_POWER_MODE             SIR_HAL_LOW_POWER_MODE
 
 /// PE <-> HAL WOWL messages
 #define WDA_WOWL_ADD_BCAST_PTRN        SIR_HAL_WOWL_ADD_BCAST_PTRN
@@ -1242,12 +1241,6 @@ tSirRetStatus uMacPostCtrlMsg(void* pSirGlobal, tSirMbMsg* pMb);
 
 #define WDA_NAN_REQUEST            SIR_HAL_NAN_REQUEST
 
-#define WDA_BLACKLIST_REQ          SIR_HAL_BLACKLIST_REQ
-
-#ifdef FEATURE_WLAN_SW_PTA
-#define WDA_SW_PTA_REQ             SIR_HAL_SW_PTA_REQ
-#endif
-
 #define WDA_START_SCAN_OFFLOAD_REQ  SIR_HAL_START_SCAN_OFFLOAD_REQ
 #define WDA_START_SCAN_OFFLOAD_RSP  SIR_HAL_START_SCAN_OFFLOAD_RSP
 #define WDA_STOP_SCAN_OFFLOAD_REQ  SIR_HAL_STOP_SCAN_OFFLOAD_REQ
@@ -1370,6 +1363,8 @@ eHalStatus WDA_SetRegDomain(void * clientCtxt, v_REGDOMAIN_t regId,
 #ifdef WLAN_FEATURE_EXTSCAN
 #define WDA_HIGH_PRIORITY_DATA_INFO_IND         SIR_HAL_HIGH_PRIORITY_DATA_INFO_IND
 #endif /* WLAN_FEATURE_EXTSCAN */
+
+#define WDA_FW_MEM_DUMP_REQ                  SIR_HAL_FW_MEM_DUMP_REQ
 
 #define WDA_WIFI_CONFIG_REQ                    SIR_HAL_WIFI_CONFIG_PARAMS
 

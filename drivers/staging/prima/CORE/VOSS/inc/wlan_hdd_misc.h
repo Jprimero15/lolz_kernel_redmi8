@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2012-2014 The Linux Foundation. All rights reserved.
- * Copyright (c) 2017 The LineageOS Project.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -57,14 +56,6 @@
 #define WLAN_HO_CFG_FILE           "wlan/wlan_ho_config"
 #endif // MSM_PLATFORM
 
-#define WLAN_MAC_FILE              "wlan/prima/wlan_mac.bin"
-
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
-#undef WLAN_NV_FILE
-#define WLAN_NV_FILE hdd_get_nv_bin()
-
-char* hdd_get_nv_bin(void);
-#endif
 
 VOS_STATUS hdd_request_firmware(char *pfileName,v_VOID_t *pCtx,v_VOID_t **ppfw_data, v_SIZE_t *pSize);
 

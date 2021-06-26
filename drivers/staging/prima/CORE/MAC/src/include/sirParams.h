@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2017, 2019-2020 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2017, 2019 The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -159,9 +159,6 @@ typedef enum {
    /*70 reserved for WIFI_DUAL_BAND_ENABLE */
    PROBE_RSP_TEMPLATE_VER1 = 71,
    STA_MONITOR_SCC = 72,
-#ifdef FEATURE_WLAN_LFR
-   BSSID_BLACKLIST = 73,
-#endif
    //MAX_FEATURE_SUPPORTED = 128
 } placeHolderInCapBitmap;
 
@@ -282,18 +279,6 @@ struct sir_mgmt_msg {
     uint8_t session_id;
     uint8_t *data;
 };
-
-#ifdef FEATURE_WLAN_SW_PTA
-/**
- * struct sir_teardown_link - Struct used to tear down link with AP
- * @type: Message type
- * @session_id: session id
- */
-struct sir_teardown_link {
-    uint16_t type;
-    uint8_t session_id;
-};
-#endif
 
 /// Message queue definitions
 //  msgtype(2bytes) reserved(2bytes) bodyptr(4bytes) bodyval(4bytes)
@@ -794,7 +779,7 @@ struct sir_teardown_link {
 #define SIR_HAL_SEND_LOG_DONE_IND            (SIR_HAL_ITC_MSG_TYPES_BEGIN + 272)
 #define SIR_HAL_LOST_LINK_PARAMS_IND         (SIR_HAL_ITC_MSG_TYPES_BEGIN + 273)
 #define SIR_HAL_SEND_FREQ_RANGE_CONTROL_IND  (SIR_HAL_ITC_MSG_TYPES_BEGIN + 274)
-/* FW Memory Dump feature is deprecated */
+#define SIR_HAL_FW_MEM_DUMP_REQ              (SIR_HAL_ITC_MSG_TYPES_BEGIN + 275)
 #define SIR_HAL_RSSI_MON_START_REQ           (SIR_HAL_ITC_MSG_TYPES_BEGIN + 276)
 #define SIR_HAL_RSSI_MON_STOP_REQ            (SIR_HAL_ITC_MSG_TYPES_BEGIN + 277)
 #define SIR_HAL_HIGH_PRIORITY_DATA_INFO_IND  (SIR_HAL_ITC_MSG_TYPES_BEGIN + 278)
@@ -838,15 +823,9 @@ struct sir_teardown_link {
 /* ARP Debug stats */
 #define SIR_HAL_SET_ARP_STATS_REQ          (SIR_HAL_ITC_MSG_TYPES_BEGIN + 303)
 #define SIR_HAL_GET_ARP_STATS_REQ          (SIR_HAL_ITC_MSG_TYPES_BEGIN + 304)
-#define SIR_HAL_LOW_POWER_MODE             (SIR_HAL_ITC_MSG_TYPES_BEGIN + 305)
 #define SIR_HAL_VOWIFI_MODE                (SIR_HAL_ITC_MSG_TYPES_BEGIN + 306)
 #define SIR_HAL_QPOWER                     (SIR_HAL_ITC_MSG_TYPES_BEGIN + 307)
 
-#define SIR_HAL_BLACKLIST_REQ              (SIR_HAL_ITC_MSG_TYPES_BEGIN + 308)
-
-#ifdef FEATURE_WLAN_SW_PTA
-#define SIR_HAL_SW_PTA_REQ                (SIR_HAL_ITC_MSG_TYPES_BEGIN + 309)
-#endif
 
 #define SIR_HAL_MSG_TYPES_END              (SIR_HAL_MSG_TYPES_BEGIN + 0x1FF)
 

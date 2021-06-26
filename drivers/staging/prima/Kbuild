@@ -26,9 +26,6 @@ ifeq ($(KERNEL_BUILD), 0)
 #Flag to enable SAE
     CONFIG_WLAN_FEATURE_SAE := y
 
-#Flag to enable SW PTA
-    CONFIG_WLAN_FEATURE_SW_PTA := y
-
 #Flag to enable OWE
     CONFIG_WLAN_AKM_SUITE_OWE := y
 
@@ -65,9 +62,6 @@ ifneq ($(CONFIG_PRONTO_WLAN),)
 #Flag to enable AP Find feature
 CONFIG_WLAN_FEATURE_AP_FIND := y
 
-#Flag to enable hold RX wake lock feature
-CONFIG_WLAN_FEATURE_HOLD_RX_WAKELOCK := n
-
 # Flag to enable feature Software AP Authentication Offload
 SAP_AUTH_OFFLOAD := y
 
@@ -79,7 +73,7 @@ CONFIG_QCOM_ESE_UPLOAD := n
 # Feature flags which are not (currently) configurable via Kconfig
 
 #Whether to build debug version
-BUILD_DEBUG_VERSION := 0
+BUILD_DEBUG_VERSION := 1
 
 #Enable this flag to build driver in diag version
 BUILD_DIAG_VERSION := 1
@@ -112,13 +106,9 @@ else
 endif # ANDROID_BUILD_TOP
 else
 ifneq ($(ANDROID_BUILD_TOP),)
-ifeq ($(TARGET_PRODUCT),sdm429w)
-    WLAN_BLD_DIR := $(ANDROID_BUILD_TOP)/$(BOARD_OPENSOURCE_DIR)/wlan
+    WLAN_BLD_DIR := $(ANDROID_BUILD_TOP)/device/qcom/msm8909w/opensource/wlan
 else
-    WLAN_BLD_DIR := $(ANDROID_BUILD_TOP)/vendor/qcom/opensource/wlan
-endif #TARGET_PRODUCT
-else
-    WLAN_BLD_DIR := $(BOARD_OPENSOURCE_DIR)/wlan
+    WLAN_BLD_DIR := device/qcom/msm8909w/opensource/wlan
 endif # ANDROID_BUILD_TOP
 endif # TARGET_SUPPORTS_WEARABLES
 endif # WLAN_PROPRIETARY
@@ -695,10 +685,6 @@ endif
 
 ifeq ($(CONFIG_WLAN_FEATURE_SAE),y)
 CDEFINES += -DWLAN_FEATURE_SAE
-endif
-
-ifeq ($(CONFIG_WLAN_FEATURE_SW_PTA),y)
-CDEFINES += -DFEATURE_WLAN_SW_PTA
 endif
 
 ifeq ($(CONFIG_WLAN_AKM_SUITE_OWE),y)

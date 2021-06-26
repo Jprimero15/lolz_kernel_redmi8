@@ -800,13 +800,8 @@ static void hdd_copy_vht_operation(hdd_station_ctx_t *hdd_sta_ctx,
     vos_mem_zero(hdd_vht_ops, sizeof(struct ieee80211_vht_operation));
 
     hdd_vht_ops->chan_width = roam_vht_ops->chanWidth;
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,0))
-    hdd_vht_ops->center_freq_seg0_idx = roam_vht_ops->chanCenterFreqSeg1;
-    hdd_vht_ops->center_freq_seg1_idx = roam_vht_ops->chanCenterFreqSeg2;
-#else
     hdd_vht_ops->center_freq_seg1_idx = roam_vht_ops->chanCenterFreqSeg1;
     hdd_vht_ops->center_freq_seg2_idx = roam_vht_ops->chanCenterFreqSeg2;
-#endif
     hdd_vht_ops->basic_mcs_set = roam_vht_ops->basicMCSSet;
 }
 
@@ -1696,8 +1691,7 @@ static void hdd_check_and_move_if_sap_is_on_dfs_chan(hdd_context_t *hdd_ctx,
         }
 
         hddLog(LOG1, "Schedule workqueue to move the SAP to non DFS channel");
-        queue_delayed_work(system_freezable_power_efficient_wq,
-                            &hdd_ctx->ecsa_chan_change_work,
+        schedule_delayed_work(&hdd_ctx->ecsa_chan_change_work,
                             msecs_to_jiffies(ECSA_DFS_CHAN_CHANGE_DEFER_TIME));
     }
 }
@@ -2243,10 +2237,8 @@ static void hdd_SendReAssocEvent(struct net_device *dev, hdd_adapter_t *pAdapter
         goto done;
     }
 
-    if (pCsrRoamInfo->nAssocRspLength < FT_ASSOC_RSP_IES_OFFSET) {
-
-        hddLog(LOGE, "%s: Invalid assoc response length %d",
-               __func__, pCsrRoamInfo->nAssocRspLength);
+    if (pCsrRoamInfo->nAssocRspLength == 0) {
+        hddLog(LOGE, "%s: Invalid assoc response length", __func__);
         goto done;
     }
 
@@ -2263,11 +2255,6 @@ static void hdd_SendReAssocEvent(struct net_device *dev, hdd_adapter_t *pAdapter
 
     // Send the Assoc Resp, the supplicant needs this for initial Auth.
     len = pCsrRoamInfo->nAssocRspLength - FT_ASSOC_RSP_IES_OFFSET;
-    if (len > IW_GENERIC_IE_MAX) {
-        hddLog(LOGE, "%s: Invalid assoc response length %d",
-                __func__, pCsrRoamInfo->nAssocRspLength);
-         goto done;
-    }
     rspRsnLength = len;
     memcpy(rspRsnIe, pFTAssocRsp, len);
     memset(rspRsnIe + len, 0, IW_GENERIC_IE_MAX - len);
@@ -2338,8 +2325,7 @@ hdd_schedule_ecsa_chan_change_work(hdd_context_t *hdd_ctx,
        time_diff = ECSA_SCC_CHAN_CHANGE_DEFER_INTERVAL - time_diff;
 
    hddLog(LOG1, FL("schedule ecsa_chan_change_work after %d ms"), time_diff);
-   queue_delayed_work(system_freezable_power_efficient_wq,
-                          &hdd_ctx->ecsa_chan_change_work,
+   schedule_delayed_work(&hdd_ctx->ecsa_chan_change_work,
                           msecs_to_jiffies(time_diff));
 }
 
@@ -4416,7 +4402,6 @@ eHalStatus hdd_smeRoamCallback( void *pContext, tCsrRoamInfo *pRoamInfo, tANI_U3
        case eCSR_ROAM_STA_CHANNEL_SWITCH:
          {
              hdd_adapter_t *pHostapdAdapter = NULL;
-             eCsrPhyMode phy_mode = 0;
              pHddCtx = WLAN_HDD_GET_CTX(pAdapter);
              pHddStaCtx = WLAN_HDD_GET_STATION_CTX_PTR(pAdapter);
 
@@ -4430,24 +4415,6 @@ eHalStatus hdd_smeRoamCallback( void *pContext, tCsrRoamInfo *pRoamInfo, tANI_U3
 
              pHddStaCtx->conn_info.operationChannel =
                  pRoamInfo->chan_info.chan_id;
-
-             if(pRoamInfo->pProfile) {
-                 phy_mode = pRoamInfo->pProfile->phyMode;
-             }
-
-             status = hdd_chan_change_notify(pAdapter,
-                                             pAdapter->dev,
-                                             pRoamInfo->chan_info.chan_id,
-                                             phy_mode);
-
-             if(status != VOS_STATUS_SUCCESS) {
-                 hddLog(VOS_TRACE_LEVEL_ERROR,
-                        "%s: hdd_chan_change_notify failed", __func__);
-             }
-
-             hddLog(VOS_TRACE_LEVEL_ERROR,
-                    "%s: Channel switch event updated to upper layer to %d",
-                    __func__, pRoamInfo->chan_info.chan_id);
 
              pHostapdAdapter = hdd_get_adapter(pHddCtx, WLAN_HDD_SOFTAP);
              if (pHostapdAdapter &&
@@ -4465,8 +4432,7 @@ eHalStatus hdd_smeRoamCallback( void *pContext, tCsrRoamInfo *pRoamInfo, tANI_U3
                          (pHostapdAdapter->sessionCtx.ap.operatingChannel !=
                           pRoamInfo->chan_info.chan_id))
                  {
-                     queue_delayed_work(system_freezable_power_efficient_wq,
-                                         &pHddCtx->ecsa_chan_change_work, 0);
+                     schedule_delayed_work(&pHddCtx->ecsa_chan_change_work, 0);
                  }
                  else
                      hddLog(LOG1, FL("SAP restart not required"));
