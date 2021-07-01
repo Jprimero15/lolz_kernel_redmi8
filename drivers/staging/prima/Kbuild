@@ -62,6 +62,9 @@ ifneq ($(CONFIG_PRONTO_WLAN),)
 #Flag to enable AP Find feature
 CONFIG_WLAN_FEATURE_AP_FIND := y
 
+#Flag to enable hold RX wake lock feature
+CONFIG_WLAN_FEATURE_HOLD_RX_WAKELOCK := n
+
 # Flag to enable feature Software AP Authentication Offload
 SAP_AUTH_OFFLOAD := y
 
@@ -73,7 +76,7 @@ CONFIG_QCOM_ESE_UPLOAD := n
 # Feature flags which are not (currently) configurable via Kconfig
 
 #Whether to build debug version
-BUILD_DEBUG_VERSION := 1
+BUILD_DEBUG_VERSION := 0
 
 #Enable this flag to build driver in diag version
 BUILD_DIAG_VERSION := 1
