@@ -39,7 +39,6 @@
 #include "limUtils.h"
 #include "limAssocUtils.h"
 #include "limSecurityUtils.h"
-#include "limTimerUtils.h"
 #include "pmmApi.h"
 #include "limApi.h"
 
