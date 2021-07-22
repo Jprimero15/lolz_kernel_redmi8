@@ -15,7 +15,6 @@
 struct ion_device {
 	struct miscdevice dev;
 	struct plist_head heaps;
-	struct rw_semaphore heap_rwsem;
 	long (*custom_ioctl)(struct ion_client *client, unsigned int cmd,
 			     unsigned long arg);
 };
@@ -211,17 +210,14 @@ struct ion_buffer *__ion_alloc(struct ion_device *idev, size_t len,
 	if (!len)
 		return ERR_PTR(-EINVAL);
 
-	down_read(&idev->heap_rwsem);
 	plist_for_each_entry(heap, &idev->heaps, node) {
 		if (BIT(heap->id) & heap_id_mask) {
 			buffer = ion_buffer_create(heap, len, align, flags);
 			if (!IS_ERR(buffer)) {
-				up_read(&idev->heap_rwsem);
 				return buffer;
 			}
 		}
 	}
-	up_read(&idev->heap_rwsem);
 
 	return ERR_PTR(-EINVAL);
 }
@@ -653,7 +649,7 @@ static const struct file_operations ion_fops = {
 	.compat_ioctl = compat_ion_ioctl
 };
 
-void ion_device_add_heap(struct ion_device *idev, struct ion_heap *heap)
+void ion_add_heap(struct ion_device *idev, struct ion_heap *heap)
 {
 	if (heap->flags & ION_HEAP_FLAG_DEFER_FREE) {
 		heap->wq = alloc_workqueue("%s", WQ_UNBOUND | WQ_MEM_RECLAIM |
@@ -665,10 +661,7 @@ void ion_device_add_heap(struct ion_device *idev, struct ion_heap *heap)
 		ion_heap_init_shrinker(heap);
 
 	plist_node_init(&heap->node, -heap->id);
-
-	down_write(&idev->heap_rwsem);
 	plist_add(&heap->node, &idev->heaps);
-	up_write(&idev->heap_rwsem);
 }
 
 int ion_walk_heaps(struct ion_client *client, int heap_id,
@@ -679,14 +672,12 @@ int ion_walk_heaps(struct ion_client *client, int heap_id,
 	struct ion_heap *heap;
 	int ret = 0;
 
-	down_write(&idev->heap_rwsem);
 	plist_for_each_entry(heap, &idev->heaps, node) {
 		if (heap->type == type && ION_HEAP(heap->id) == heap_id) {
 			ret = f(heap, data);
 			break;
 		}
 	}
-	up_write(&idev->heap_rwsem);
 
 	return ret;
 }
@@ -705,7 +696,6 @@ struct ion_device *ion_device_create(long (*custom_ioctl)
 	*idev = (typeof(*idev)){
 		.custom_ioctl = custom_ioctl,
 		.heaps = PLIST_HEAD_INIT(idev->heaps),
-		.heap_rwsem = __RWSEM_INITIALIZER(idev->heap_rwsem),
 		.dev = {
 			.minor = MISC_DYNAMIC_MINOR,
 			.name = "ion",

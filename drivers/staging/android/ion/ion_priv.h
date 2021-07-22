@@ -183,7 +183,7 @@ void ion_device_destroy(struct ion_device *dev);
  * @dev:		the device
  * @heap:		the heap to add
  */
-void ion_device_add_heap(struct ion_device *dev, struct ion_heap *heap);
+void ion_add_heap(struct ion_device *dev, struct ion_heap *heap);
 
 struct pages_mem {
 	struct page **pages;
