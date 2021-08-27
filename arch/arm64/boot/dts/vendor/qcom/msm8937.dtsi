@@ -1251,6 +1251,7 @@
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
+		status = "disabled";
 	};
 
 	jtag_mm1: jtagmm@61bd000 {
@@ -1262,6 +1263,7 @@
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
+		status = "disabled";
 	};
 
 	jtag_mm2: jtagmm@61be000 {
@@ -1273,6 +1275,7 @@
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
+		status = "disabled";
 	};
 
 	jtag_mm3: jtagmm@61bf000 {
@@ -1284,6 +1287,7 @@
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
+		status = "disabled";
 	};
 
 	jtag_mm4: jtagmm@619c000 {
@@ -1295,6 +1299,7 @@
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
+		status = "disabled";
 	};
 
 	jtag_mm5: jtagmm@619d000 {
@@ -1306,6 +1311,7 @@
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
+		status = "disabled";
 	};
 
 	jtag_mm6: jtagmm@619e000 {
@@ -1317,6 +1323,7 @@
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
+		status = "disabled";
 	};
 
 	jtag_mm7: jtagmm@619f000 {
@@ -1328,6 +1335,7 @@
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
+		status = "disabled";
 	};
 
 	apcs: syscon@0b011008 {
@@ -2216,7 +2224,6 @@
 #include "msm8937-audio.dtsi"
 #include "msm8937-camera.dtsi"
 #include "msm-gdsc-8916.dtsi"
-#include "msm8937-coresight.dtsi"
 #include "msm8937-thermal.dtsi"
 
 &gdsc_venus {
