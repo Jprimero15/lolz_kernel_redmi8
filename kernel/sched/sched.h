@@ -2510,10 +2510,38 @@ static inline bool uclamp_latency_sensitive(struct task_struct *p)
 	return tg->latency_sensitive;
 }
 
+static inline int uclamp_filter_boost(struct task_struct *p)
+{
+	struct cgroup_subsys_state *css = task_css(p, cpuset_cgrp_id);
+	struct task_group *tg;
+	char name_buf[NAME_MAX + 1];
+
+	tg = container_of(css, struct task_group, css);
+
+	cgroup_name(tg->css.cgroup, name_buf, sizeof(name_buf));
+	if (unlikely(!strncmp(name_buf, "top-app", strlen("top-app")))) {
+		int adj = p->signal->oom_score_adj;
+		pr_debug("top app is %s with adj %i\n", p->comm, adj);
+
+		/* We only care about adj == 0 */
+		if (adj != 0)
+			return 0;
+
+		/* Don't touch kthreads */
+		if (p->flags & PF_KTHREAD)
+			return 0;
+
+		return tg->boosted;
+	}
+
+	return tg->boosted;
+}
+
 static inline bool uclamp_boosted(struct task_struct *p)
 {
 	struct cgroup_subsys_state *css = task_css(p, cpuset_cgrp_id);
 	struct task_group *tg;
+	int tg_boost;
 
 	if (!css)
 		return false;
@@ -2523,7 +2551,9 @@ static inline bool uclamp_boosted(struct task_struct *p)
 
 	tg = container_of(css, struct task_group, css);
 
-	return tg->boosted;
+	tg_boost = uclamp_filter_boost(p);
+
+	return tg_boost;
 }
 #else
 static inline bool uclamp_latency_sensitive(struct task_struct *p)
