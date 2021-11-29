@@ -2,6 +2,7 @@
  * RAM Oops/Panic logger
  *
  * Copyright (C) 2010 Marco Stornelli <marco.stornelli@gmail.com>
+ * Copyright (C) 2021 XiaoMi, Inc.
  * Copyright (C) 2011 Kees Cook <keescook@chromium.org>
  *
  * This program is free software; you can redistribute it and/or
@@ -36,7 +37,6 @@
 #include <linux/pstore_ram.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
-#include <linux/memblock.h>
 
 #define RAMOOPS_KERNMSG_HDR "===="
 #define MIN_MEM_SIZE 4096UL
@@ -46,7 +46,7 @@ module_param(record_size, ulong, 0400);
 MODULE_PARM_DESC(record_size,
 		"size of each dump done on oops/panic");
 
-static ulong ramoops_console_size = MIN_MEM_SIZE;
+static ulong ramoops_console_size = 512*1024UL;
 module_param_named(console_size, ramoops_console_size, ulong, 0400);
 MODULE_PARM_DESC(console_size, "size of kernel console log");
 
@@ -54,16 +54,16 @@ static ulong ramoops_ftrace_size = MIN_MEM_SIZE;
 module_param_named(ftrace_size, ramoops_ftrace_size, ulong, 0400);
 MODULE_PARM_DESC(ftrace_size, "size of ftrace log");
 
-static ulong ramoops_pmsg_size = MIN_MEM_SIZE;
+static ulong ramoops_pmsg_size = 32*1024UL;
 module_param_named(pmsg_size, ramoops_pmsg_size, ulong, 0400);
 MODULE_PARM_DESC(pmsg_size, "size of user space message log");
 
-static unsigned long long mem_address;
+static unsigned long long mem_address = 0x9ff00000;
 module_param(mem_address, ullong, 0400);
 MODULE_PARM_DESC(mem_address,
 		"start of reserved RAM used to store oops/panic logs");
 
-static ulong mem_size;
+static ulong mem_size = 0x100000;
 module_param(mem_size, ulong, 0400);
 MODULE_PARM_DESC(mem_size,
 		"size of reserved RAM used to store oops/panic logs");
@@ -739,27 +739,6 @@ static struct platform_driver ramoops_driver = {
 	},
 };
 
-extern void emergency_unlock_console(void);
-static int ramoops_console_notify (struct notifier_block *this,
-		unsigned long event, void *ptr)
-{
-	printk("\n");
-	pr_emerg("ramoops unlock console ...\n");
-	emergency_unlock_console();
-
-	return 0;
-}
-
-static struct notifier_block ramoop_nb = {
-	.notifier_call = ramoops_console_notify,
-	.priority = INT_MAX,
-};
-
-static void ramoops_prepare(void)
-{
-	atomic_notifier_chain_register(&panic_notifier_list, &ramoop_nb);
-}
-
 static void ramoops_register_dummy(void)
 {
 	if (!mem_size)
@@ -795,54 +774,9 @@ static void ramoops_register_dummy(void)
 	}
 }
 
-
-static struct ramoops_platform_data ramoops_data;
-
-static struct platform_device ramoops_dev  = {
-	.name = "ramoops",
-	.dev = {
-		.platform_data = &ramoops_data,
-	},
-};
-
-static int __init ramoops_memreserve(char *p)
-{
-	unsigned long size;
-
-	if (!p)
-		return 1;
-
-	size = memparse(p, &p) & PAGE_MASK;
-	ramoops_data.mem_size = size;
-	ramoops_data.mem_address = 0xB0000000;
-	ramoops_data.console_size = size / 2;
-	ramoops_data.pmsg_size = size / 2;
-	ramoops_data.dump_oops = 1;
-
-	pr_info("msm_reserve_ramoops_memory addr=%lx,size=%lx\n",
-			ramoops_data.mem_address, ramoops_data.mem_size);
-	pr_info("msm_reserve_ramoops_memory record_size=%lx,ftrace_size=%lx\n",
-			ramoops_data.record_size, ramoops_data.ftrace_size);
-
-	memblock_reserve(ramoops_data.mem_address, ramoops_data.mem_size);
-
-	return 0;
-}
-early_param("ramoops_memreserve", ramoops_memreserve);
-
-static int __init msm_register_ramoops_device(void)
-{
-	pr_info("msm_register_ramoops_device\n");
-	if (platform_device_register(&ramoops_dev))
-		pr_info("Unable to register ramoops platform device\n");
-	return 0;
-}
-core_initcall(msm_register_ramoops_device);
-
 static int __init ramoops_init(void)
 {
 	ramoops_register_dummy();
-	ramoops_prepare();
 	return platform_driver_register(&ramoops_driver);
 }
 postcore_initcall(ramoops_init);
@@ -852,7 +786,6 @@ static void __exit ramoops_exit(void)
 	platform_driver_unregister(&ramoops_driver);
 	platform_device_unregister(dummy);
 	kfree(dummy_data);
-	atomic_notifier_chain_unregister(&panic_notifier_list, &ramoop_nb);
 }
 module_exit(ramoops_exit);
 
