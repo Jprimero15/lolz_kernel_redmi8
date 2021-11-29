@@ -91,7 +91,7 @@ static ssize_t core_info_read(struct file *file, char __user *buf,
 	cur += write_str(cur, end - cur, "Core state: %d\n", core->state);
 	rc = call_hfi_op(hdev, get_fw_info, hdev->hfi_device_data, &fw_info);
 	if (rc) {
-		dprintk(VIDC_WARN, "Failed to read FW info\n");
+		dprintk(VIDC_WARN, " Failed to read FW info\n");
 		goto err_fw_info;
 	}
 
@@ -459,7 +459,7 @@ struct dentry *msm_vidc_debugfs_init_inst(struct msm_vidc_inst *inst,
 
 	dir = debugfs_create_dir(debugfs_name, parent);
 	if (IS_ERR_OR_NULL(dir)) {
-		dprintk(VIDC_ERR, "Failed to create debugfs for msm_vidc\n");
+		//dprintk(VIDC_ERR, "Failed to create debugfs for msm_vidc\n");
 		goto failed_create_dir;
 	}
 
