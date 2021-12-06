@@ -344,17 +344,17 @@ include scripts/Kbuild.include
 # Make variables (CC, etc...)
 AS		= $(CROSS_COMPILE)as
 LD		= $(CROSS_COMPILE)ld
-CC		= $(CROSS_COMPILE)gcc
+CC		= clang
 LDGOLD		= $(CROSS_COMPILE)ld.gold
 LDLLD		= ld.lld
 CPP		= $(CC) -E
-AR		= $(CROSS_COMPILE)ar
-NM		= $(CROSS_COMPILE)nm
+AR		= llvm-ar
+NM		= llvm-nm
 LLVMNM		= llvm-nm
-STRIP		= $(CROSS_COMPILE)strip
-OBJCOPY		= $(CROSS_COMPILE)objcopy
+STRIP		= llvm-strip
+OBJCOPY		= llvm-objcopy
 LLVMOBJCOPY	= llvm-objcopy
-OBJDUMP		= $(CROSS_COMPILE)objdump
+OBJDUMP		= llvm-objdump
 AWK		= awk
 GENKSYMS	= scripts/genksyms/genksyms
 INSTALLKERNEL  := installkernel
