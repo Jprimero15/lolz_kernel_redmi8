@@ -276,7 +276,7 @@ int ipa_rm_inactivity_timer_release_resource(
 	}
 	ipa_rm_it_handles[resource_name].work_in_progress = true;
 	ipa_rm_it_handles[resource_name].reschedule_work = false;
-	__pm_stay_awake(&ipa_rm_it_handles[resource_name].w_lock);
+	__pm_wakeup_event(&ipa_rm_it_handles[resource_name].w_lock, 500);
 	IPA_RM_DBG_LOW("%s: setting delayed work\n", __func__);
 	queue_delayed_work(system_unbound_wq,
 			      &ipa_rm_it_handles[resource_name].work,
