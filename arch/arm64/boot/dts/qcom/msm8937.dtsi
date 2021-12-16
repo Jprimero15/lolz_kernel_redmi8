@@ -1195,6 +1195,7 @@
 		reg-names = "etm-base";
 
 		qcom,coresight-jtagmm-cpu = <&CPU0>;
+		status = "disabled";
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
@@ -1206,6 +1207,7 @@
 		reg-names = "etm-base";
 
 		qcom,coresight-jtagmm-cpu = <&CPU1>;
+		status = "disabled";
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
@@ -1217,6 +1219,7 @@
 		reg-names = "etm-base";
 
 		qcom,coresight-jtagmm-cpu = <&CPU2>;
+		status = "disabled";
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
@@ -1228,6 +1231,7 @@
 		reg-names = "etm-base";
 
 		qcom,coresight-jtagmm-cpu = <&CPU3>;
+		status = "disabled";
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
@@ -1239,6 +1243,7 @@
 		reg-names = "etm-base";
 
 		qcom,coresight-jtagmm-cpu = <&CPU4>;
+		status = "disabled";
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
@@ -1250,6 +1255,7 @@
 		reg-names = "etm-base";
 
 		qcom,coresight-jtagmm-cpu = <&CPU5>;
+		status = "disabled";
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
@@ -1261,6 +1267,7 @@
 		reg-names = "etm-base";
 
 		qcom,coresight-jtagmm-cpu = <&CPU6>;
+		status = "disabled";
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
@@ -1272,6 +1279,7 @@
 		reg-names = "etm-base";
 
 		qcom,coresight-jtagmm-cpu = <&CPU7>;
+		status = "disabled";
 
 		clocks = <&clock_gcc clk_qdss_clk>;
 		clock-names = "core_clk";
@@ -1919,7 +1927,6 @@
 #include "msm8937-audio.dtsi"
 #include "msm8937-camera.dtsi"
 #include "msm-gdsc-8916.dtsi"
-#include "msm8937-coresight.dtsi"
 #include "msm8937-thermal.dtsi"
 
 &gdsc_venus {
