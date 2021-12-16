@@ -11,10 +11,9 @@
 # GNU General Public License for more details.
 #
 
-# obj-$(CONFIG_HQ_SYSFS_SUPPORT) := hqsysfs.o
-obj-y := hqsysfs.o
-obj-y += hqsys_misc.o
-obj-y += hqsys_pcba.o
-obj-y += fm_con.o
+obj-$(CONFIG_HQ_SYSFS_SUPPORT) += fm_con.o
+#obj-y := hqsysfs.o
+#obj-y += hqsys_misc.o
+#obj-y += hqsys_pcba.o
 #obj-y += hqsys_emmc_info.o
 #obj-y += hqsys_cam_info.o

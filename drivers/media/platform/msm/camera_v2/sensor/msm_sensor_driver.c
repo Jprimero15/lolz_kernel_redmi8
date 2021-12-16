@@ -19,7 +19,6 @@
 #include "msm_cci.h"
 #include "msm_camera_dt_util.h"
 #include "msm_sensor_driver.h"
-#include <linux/hqsysfs.h>
 
 /* Logging macro */
 #undef CDBG
@@ -1237,7 +1236,6 @@ CSID_TG:
 			if (strncmp((char *)(s_ctrl->sensordata->eeprom_name),
 				olive_rear_camera_str_buff[i][0],
 				strlen(s_ctrl->sensordata->eeprom_name)) == 0) {
-				hq_regiser_hw_info(HWID_MAIN_CAM, olive_rear_camera_str_buff[i][1]);
 				break;
 			}
 		}
@@ -1246,7 +1244,6 @@ CSID_TG:
 			if (strncmp((char *)(s_ctrl->sensordata->eeprom_name),
 				olive_front_camera_str_buff[i][0],
 				strlen(s_ctrl->sensordata->eeprom_name)) == 0) {
-				hq_regiser_hw_info(HWID_SUB_CAM, olive_front_camera_str_buff[i][1]);
 				break;
 			}
 		}
@@ -1255,12 +1252,11 @@ CSID_TG:
 			if (strncmp((char *)(s_ctrl->sensordata->sensor_name),
 				olive_rear_aux_camera_str_buff[i][0],
 				strlen(s_ctrl->sensordata->sensor_name)) == 0) {
-				hq_regiser_hw_info(HWID_MAIN_CAM_2, olive_rear_aux_camera_str_buff[i][1]);
 				break;
 			}
 		}
 	}
-#elif defined OLIVELITE_MSM_CAMERA_HW_INFO
+/* #elif defined OLIVELITE_MSM_CAMERA_HW_INFO
 	if (0 == s_ctrl->id) {
 		for (i = 0; i < 6; i++)	{
 			if (strncmp((char *)(s_ctrl->sensordata->eeprom_name),
@@ -1319,7 +1315,7 @@ CSID_TG:
 			hq_regiser_hw_info(HWID_SUB_CAM, "galaxycore_5035_iii");
 		}
 		//hq_regiser_hw_info(HWID_SUB_CAM, (char *)(s_ctrl->sensordata->eeprom_name));
-	}
+	} */
 #endif
 	// to get proper camera info End
 
