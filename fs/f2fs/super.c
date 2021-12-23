@@ -400,6 +400,7 @@ static int parse_options(struct super_block *sb, char *options)
 
 		switch (token) {
 		case Opt_gc_background:
+			pr_info("F2FS-fs: changing background GC mode not supported");
 			break;
 		case Opt_disable_roll_forward:
 			set_opt(sbi, DISABLE_ROLL_FORWARD);
@@ -720,7 +721,7 @@ static int parse_options(struct super_block *sb, char *options)
 			kvfree(name);
 			break;
 		case Opt_fsync:
-			f2fs_msg(sbi->sb, KERN_INFO, "changing fsync mode not supported");
+			pr_info("F2FS-fs: changing fsync mode not supported");
 			break;
 		case Opt_test_dummy_encryption:
 #ifdef CONFIG_FS_ENCRYPTION
