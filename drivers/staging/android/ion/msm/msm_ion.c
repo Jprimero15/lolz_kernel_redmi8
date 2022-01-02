@@ -827,7 +827,7 @@ long msm_ion_custom_ioctl(struct ion_client *client,
 
 		if ((unsigned long)data.flush_data.vaddr >
 				(ULONG_MAX - data.flush_data.offset)) {
-			pr_err("%s: Integer overflow detected for %pK\n",
+			pr_debug("%s: Integer overflow detected for %pK\n",
 			       __func__, data.flush_data.vaddr);
 			ret = -EINVAL;
 		} else {
@@ -836,7 +836,7 @@ long msm_ion_custom_ioctl(struct ion_client *client,
 			end = start + data.flush_data.length;
 
 			if (check_vaddr_bounds(start, end)) {
-				pr_err("%s: virtual address %pK is out of bounds\n",
+				pr_debug("%s: virtual address %pK is out of bounds\n",
 				       __func__, data.flush_data.vaddr);
 				ret = -EINVAL;
 			} else {
