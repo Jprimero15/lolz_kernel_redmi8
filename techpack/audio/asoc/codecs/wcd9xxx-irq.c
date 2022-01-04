@@ -582,7 +582,7 @@ int wcd9xxx_irq_init(struct wcd9xxx_core_resource *wcd9xxx_res)
 	}
 
 	ret = request_threaded_irq(wcd9xxx_res->irq, NULL, wcd9xxx_irq_thread,
-				   IRQF_TRIGGER_HIGH | IRQF_ONESHOT | IRQF_PERF_CRITICAL,
+				   IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
 				   "wcd9xxx", wcd9xxx_res);
 	if (ret != 0)
 		dev_err(wcd9xxx_res->dev, "Failed to request IRQ %d: %d\n",
@@ -620,7 +620,7 @@ int wcd9xxx_request_irq(struct wcd9xxx_core_resource *wcd9xxx_res,
 
 	virq = phyirq_to_virq(wcd9xxx_res, irq);
 
-	return request_threaded_irq(virq, NULL, handler, IRQF_TRIGGER_RISING | IRQF_PERF_CRITICAL,
+	return request_threaded_irq(virq, NULL, handler, IRQF_TRIGGER_RISING,
 				    name, data);
 }
 EXPORT_SYMBOL(wcd9xxx_request_irq);
