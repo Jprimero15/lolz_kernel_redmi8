@@ -108,14 +108,14 @@ module_param_named(min_adj, min_adj, short, 0644);
  * too low, and task killing can be more aggressive when too
  * high.
  */
-static int free_file_limit = 20000;
+static int free_file_limit = 36000;
 module_param_named(free_file_limit, free_file_limit, int, 0644);
 
 /*
  * Number of SWAP pages in MiB below which tasks with
  * adjs greater than min_adj should be killed.
  */
-static int free_swap_limit = 20;
+static int free_swap_limit = 40;
 module_param_named(free_swap_limit, free_swap_limit, int, 0644);
 
 /*
