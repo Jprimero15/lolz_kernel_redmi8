@@ -61,8 +61,6 @@
 #include <linux/cgroup.h>
 #include <linux/wait.h>
 
-#include <linux/sched/sysctl.h>
-
 DEFINE_STATIC_KEY_FALSE(cpusets_pre_enable_key);
 DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
 
@@ -2106,10 +2104,6 @@ static void uclamp_set(struct kernfs_open_file *of,
 			}
 		}
 	}
-
-	/* Set systemwide uclamps */
-	sysctl_sched_uclamp_util_min = 128;
-	sysctl_sched_uclamp_util_min_rt_default = 500;
 }
 #endif
 
