@@ -1386,12 +1386,12 @@ static int msm_anlg_cdc_codec_enable_on_demand_supply(
 	struct on_demand_supply *supply;
 
 	if (w->shift >= ON_DEMAND_SUPPLIES_MAX) {
-		dev_err(codec->dev, "%s: error index > MAX Demand supplies",
+		dev_dbg(codec->dev, "%s: error index > MAX Demand supplies",
 			__func__);
 		ret = -EINVAL;
 		goto out;
 	}
-	dev_err(codec->dev, "%s: supply: %s event: %d ref: %d\n",
+	dev_dbg(codec->dev, "%s: supply: %s event: %d ref: %d\n",
 		__func__, on_demand_supply_name[w->shift], event,
 		atomic_read(&sdm660_cdc->on_demand_list[w->shift].ref));
 
@@ -2699,10 +2699,10 @@ static void wcd_imped_config(struct snd_soc_codec *codec,
 				snd_soc_codec_get_drvdata(codec);
 
 	value = wcd_get_impedance_value(imped);
-	dev_err(codec->dev, "%s, %d Ohm\n", __func__, value);
+	dev_dbg(codec->dev, "%s, %d Ohm\n", __func__, value);
 
 	if (value < wcd_imped_val[0]) {
-		dev_err(codec->dev,
+		dev_dbg(codec->dev,
 			"%s, detected impedance is less than 4 Ohm\n",
 			 __func__);
 		return;
@@ -2773,7 +2773,7 @@ static int msm_anlg_cdc_hphl_dac_event(struct snd_soc_dapm_widget *w,
 					snd_soc_codec_get_drvdata(codec);
 	int ret;
 
-	dev_err(codec->dev, "%s %s %d\n", __func__, w->name, event);
+	dev_dbg(codec->dev, "%s %s %d\n", __func__, w->name, event);
 	ret = wcd_mbhc_get_impedance(&sdm660_cdc->mbhc,
 			&impedl, &impedr);
 
@@ -2889,7 +2889,7 @@ static int msm_anlg_cdc_hphr_dac_event(struct snd_soc_dapm_widget *w,
 	struct sdm660_cdc_priv *sdm660_cdc =
 					snd_soc_codec_get_drvdata(codec);
 
-	dev_err(codec->dev, "%s %s %d\n", __func__, w->name, event);
+	dev_dbg(codec->dev, "%s %s %d\n", __func__, w->name, event);
 
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
@@ -2933,7 +2933,7 @@ static int msm_anlg_cdc_hph_pa_event(struct snd_soc_dapm_widget *w,
 	struct sdm660_cdc_priv *sdm660_cdc =
 					snd_soc_codec_get_drvdata(codec);
 
-	dev_err(codec->dev, "%s: %s event = %d\n", __func__, w->name, event);
+	dev_dbg(codec->dev, "%s: %s event = %d\n", __func__, w->name, event);
 
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
