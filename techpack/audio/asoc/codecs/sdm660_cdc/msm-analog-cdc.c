@@ -1386,12 +1386,12 @@ static int msm_anlg_cdc_codec_enable_on_demand_supply(
 	struct on_demand_supply *supply;
 
 	if (w->shift >= ON_DEMAND_SUPPLIES_MAX) {
-		dev_err(codec->dev, "%s: error index > MAX Demand supplies",
+		dev_dbg(codec->dev, "%s: error index > MAX Demand supplies",
 			__func__);
 		ret = -EINVAL;
 		goto out;
 	}
-	dev_err(codec->dev, "%s: supply: %s event: %d ref: %d\n",
+	dev_dbg(codec->dev, "%s: supply: %s event: %d ref: %d\n",
 		__func__, on_demand_supply_name[w->shift], event,
 		atomic_read(&sdm660_cdc->on_demand_list[w->shift].ref));
 
@@ -2138,7 +2138,7 @@ static int msm_anlg_cdc_codec_enable_adc(struct snd_soc_dapm_widget *w,
 	u16 adc_reg;
 	u8 init_bit_shift;
 
-	dev_err(codec->dev, "%s %s %d\n", __func__, w->name, event);
+	dev_dbg(codec->dev, "%s %s %d\n", __func__, w->name, event);
 
 	adc_reg = MSM89XX_PMIC_ANALOG_TX_1_2_TEST_CTL_2;
 
@@ -2148,7 +2148,7 @@ static int msm_anlg_cdc_codec_enable_adc(struct snd_soc_dapm_widget *w,
 		 (w->reg == MSM89XX_PMIC_ANALOG_TX_3_EN))
 		init_bit_shift = 4;
 	else {
-		dev_err(codec->dev, "%s: Error, invalid adc register\n",
+		dev_dbg(codec->dev, "%s: Error, invalid adc register\n",
 			__func__);
 		return -EINVAL;
 	}
@@ -2478,14 +2478,14 @@ static int msm_anlg_cdc_codec_enable_micbias(struct snd_soc_dapm_widget *w,
 	char *external_text = "External";
 	bool micbias2;
 
-	dev_err(codec->dev, "%s %s %d %d\n", __func__, w->name, event, w->reg);
+	dev_dbg(codec->dev, "%s %s %d %d\n", __func__, w->name, event, w->reg);
 	switch (w->reg) {
 	case MSM89XX_PMIC_ANALOG_MICB_1_EN:
 	case MSM89XX_PMIC_ANALOG_MICB_2_EN:
 		micb_int_reg = MSM89XX_PMIC_ANALOG_MICB_1_INT_RBIAS;
 		break;
 	default:
-		dev_err(codec->dev,
+		dev_dbg(codec->dev,
 			"%s: Error, invalid micbias register 0x%x\n",
 			__func__, w->reg);
 		return -EINVAL;
@@ -2616,7 +2616,7 @@ static int sdm660_wcd_codec_enable_vdd_spkr(struct snd_soc_dapm_widget *w,
 		if (sdm660_cdc->spkdrv_reg) {
 			ret = regulator_enable(sdm660_cdc->spkdrv_reg);
 			if (ret)
-				dev_err(codec->dev,
+				dev_dbg(codec->dev,
 					"%s Failed to enable spkdrv reg %s\n",
 					__func__, MSM89XX_VDD_SPKDRV_NAME);
 		}
@@ -2625,7 +2625,7 @@ static int sdm660_wcd_codec_enable_vdd_spkr(struct snd_soc_dapm_widget *w,
 		if (sdm660_cdc->spkdrv_reg) {
 			ret = regulator_disable(sdm660_cdc->spkdrv_reg);
 			if (ret)
-				dev_err(codec->dev,
+				dev_dbg(codec->dev,
 					"%s: Failed to disable spkdrv_reg %s\n",
 					__func__, MSM89XX_VDD_SPKDRV_NAME);
 		}
@@ -2699,10 +2699,10 @@ static void wcd_imped_config(struct snd_soc_codec *codec,
 				snd_soc_codec_get_drvdata(codec);
 
 	value = wcd_get_impedance_value(imped);
-	dev_err(codec->dev, "%s, %d Ohm\n", __func__, value);
+	dev_dbg(codec->dev, "%s, %d Ohm\n", __func__, value);
 
 	if (value < wcd_imped_val[0]) {
-		dev_err(codec->dev,
+		dev_dbg(codec->dev,
 			"%s, detected impedance is less than 4 Ohm\n",
 			 __func__);
 		return;
@@ -2773,7 +2773,7 @@ static int msm_anlg_cdc_hphl_dac_event(struct snd_soc_dapm_widget *w,
 					snd_soc_codec_get_drvdata(codec);
 	int ret;
 
-	dev_err(codec->dev, "%s %s %d\n", __func__, w->name, event);
+	dev_dbg(codec->dev, "%s %s %d\n", __func__, w->name, event);
 	ret = wcd_mbhc_get_impedance(&sdm660_cdc->mbhc,
 			&impedl, &impedr);
 
@@ -2889,7 +2889,7 @@ static int msm_anlg_cdc_hphr_dac_event(struct snd_soc_dapm_widget *w,
 	struct sdm660_cdc_priv *sdm660_cdc =
 					snd_soc_codec_get_drvdata(codec);
 
-	dev_err(codec->dev, "%s %s %d\n", __func__, w->name, event);
+	dev_dbg(codec->dev, "%s %s %d\n", __func__, w->name, event);
 
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
@@ -2933,7 +2933,7 @@ static int msm_anlg_cdc_hph_pa_event(struct snd_soc_dapm_widget *w,
 	struct sdm660_cdc_priv *sdm660_cdc =
 					snd_soc_codec_get_drvdata(codec);
 
-	dev_err(codec->dev, "%s: %s event = %d\n", __func__, w->name, event);
+	dev_dbg(codec->dev, "%s: %s event = %d\n", __func__, w->name, event);
 
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
