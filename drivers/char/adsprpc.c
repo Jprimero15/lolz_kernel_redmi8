@@ -48,7 +48,9 @@
 #include "adsprpc_compat.h"
 #include "adsprpc_shared.h"
 #include <soc/qcom/ramdump.h>
+#ifdef CONFIG_DEBUG_FS
 #include <linux/debugfs.h>
+#endif
 #include <linux/stat.h>
 
 #define TZ_PIL_PROTECT_MEM_SUBSYS_ID 0x0C
@@ -62,8 +64,10 @@
 #define FASTRPC_ENOSUCH 39
 #define VMID_SSC_Q6     5
 #define VMID_ADSP_Q6    6
+#ifdef CONFIG_DEBUG_FS
 #define DEBUGFS_SIZE 3072
 #define UL_SIZE 25
+#endif
 #define PID_SIZE 10
 
 #define AUDIO_PDR_SERVICE_LOCATION_CLIENT_NAME   "audio_pdr_adsprpc"
@@ -143,8 +147,10 @@ static void fastrpc_glink_close(void *chan, int cid);
 static int fastrpc_pdr_notifier_cb(struct notifier_block *nb,
 					unsigned long code,
 					void *data);
+#ifdef CONFIG_DEBUG_FS
 static struct dentry *debugfs_root;
 static struct dentry *debugfs_global_file;
+#endif
 
 static inline uint64_t buf_page_start(uint64_t buf)
 {
@@ -413,7 +419,9 @@ struct fastrpc_file {
 	int sharedcb;
 	struct fastrpc_apps *apps;
 	struct hlist_head perf;
+#ifdef CONFIG_DEBUG_FS
 	struct dentry *debugfs_file;
+#endif
 	struct mutex perf_mutex;
 	int  qos_request;
 	struct mutex map_mutex;
@@ -421,7 +429,9 @@ struct fastrpc_file {
 	int refcount;
 	/* Identifies the device (MINOR_NUM_DEV / MINOR_NUM_SECURE_DEV) */
 	int dev_minor;
+#ifdef CONFIG_DEBUG_FS
 	char *debug_buf;
+#endif
 };
 
 static struct fastrpc_apps gfa;
@@ -2707,7 +2717,7 @@ static int fastrpc_munmap_on_dsp_rh(struct fastrpc_file *fl, uint64_t phys,
 		if (err == AEE_EUNSUPPORTED) {
 			remote_arg_t ra[1];
 
-			pr_warn("ADSPRPC:Failed to get security key with updated remote call, falling back to older method");
+			pr_debug("ADSPRPC:Failed to get security key with updated remote call, falling back to older method");
 			ra[0].buf.pv = (void *)&routargs;
 			ra[0].buf.len = sizeof(routargs);
 			ioctl.inv.sc = REMOTE_SCALARS_MAKE(7, 0, 1);
@@ -3212,7 +3222,9 @@ static int fastrpc_file_free(struct fastrpc_file *fl)
 	spin_lock(&fl->apps->hlock);
 	hlist_del_init(&fl->hn);
 	spin_unlock(&fl->apps->hlock);
+#ifdef CONFIG_DEBUG_FS
 	kfree(fl->debug_buf);
+#endif
 
 	if (!fl->sctx) {
 		kfree(fl);
@@ -3270,8 +3282,10 @@ static int fastrpc_device_release(struct inode *inode, struct file *file)
 	struct fastrpc_file *fl = (struct fastrpc_file *)file->private_data;
 
 	if (fl) {
+#ifdef CONFIG_DEBUG_FS
 		if (fl->debugfs_file != NULL)
 			debugfs_remove(fl->debugfs_file);
+#endif
 		fastrpc_file_free(fl);
 		file->private_data = NULL;
 	}
@@ -3390,6 +3404,7 @@ bail:
 	return err;
 }
 
+#ifdef CONFIG_DEBUG_FS
 static int fastrpc_debugfs_open(struct inode *inode, struct file *filp)
 {
 	filp->private_data = inode->i_private;
@@ -3637,6 +3652,8 @@ static const struct file_operations debugfs_fops = {
 	.open = fastrpc_debugfs_open,
 	.read = fastrpc_debugfs_read,
 };
+#endif
+
 static int fastrpc_channel_open(struct fastrpc_file *fl)
 {
 	struct fastrpc_apps *me = &gfa;
@@ -3773,6 +3790,7 @@ static int fastrpc_set_process_info(struct fastrpc_file *fl)
 	cur_comm[TASK_COMM_LEN-1] = '\0';
 	fl->tgid = current->tgid;
 	snprintf(strpid, PID_SIZE, "%d", current->pid);
+#ifdef CONFIG_DEBUG_FS
 	buf_size = strlen(cur_comm) + strlen("_") + strlen(strpid) + 1;
 	fl->debug_buf = kzalloc(buf_size, GFP_KERNEL);
 	if (!fl->debug_buf) {
@@ -3786,6 +3804,7 @@ static int fastrpc_set_process_info(struct fastrpc_file *fl)
 	if (!fl->debugfs_file)
 		pr_warn("Error: %s: %s: failed to create debugfs file %s\n",
 				cur_comm, __func__, fl->debug_buf);
+#endif
 
 	return err;
 }
@@ -4353,8 +4372,10 @@ static int fastrpc_cb_probe(struct device *dev)
 	sess->smmu.dev = dev;
 	sess->smmu.enabled = 1;
 	chan->sesscount++;
+#ifdef CONFIG_DEBUG_FS
 	debugfs_global_file = debugfs_create_file("global", 0644, debugfs_root,
 							NULL, &debugfs_fops);
+#endif
 bail:
 	return err;
 }
@@ -4676,7 +4697,9 @@ static int __init fastrpc_device_init(void)
 	struct device *secure_dev = NULL;
 	int err = 0, i;
 
+#ifdef CONFIG_DEBUG_FS
 	debugfs_root = debugfs_create_dir("adsprpc", NULL);
+#endif
 	memset(me, 0, sizeof(*me));
 	fastrpc_init(me);
 	me->dev = NULL;
@@ -4786,7 +4809,9 @@ static void __exit fastrpc_device_exit(void)
 	cdev_del(&me->cdev);
 	unregister_chrdev_region(me->dev_no, NUM_CHANNELS);
 	ion_client_destroy(me->client);
+#ifdef CONFIG_DEBUG_FS
 	debugfs_remove_recursive(debugfs_root);
+#endif
 }
 
 late_initcall(fastrpc_device_init);
