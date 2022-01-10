@@ -486,7 +486,7 @@ retry:
 		ret = ion_secure_cma_add_to_pool(sheap, len, false);
 		if (ret) {
 			mutex_unlock(&sheap->alloc_lock);
-			dev_err(sheap->dev, "Fail to allocate buffer\n");
+			dev_dbg(sheap->dev, "Fail to allocate buffer\n");
 			goto err;
 		}
 		ret = ion_secure_cma_alloc_from_pool(sheap, &info->phys, len);

@@ -520,7 +520,7 @@ struct page *cma_alloc(struct cma *cma, size_t count, unsigned int align)
 	trace_cma_alloc(pfn, page, count, align);
 
 	if (ret) {
-		pr_info("%s: alloc failed, req-size: %zu pages, ret: %d\n",
+		pr_debug("%s: alloc failed, req-size: %zu pages, ret: %d\n",
 			__func__, count, ret);
 		cma_debug_show_areas(cma);
 	}
