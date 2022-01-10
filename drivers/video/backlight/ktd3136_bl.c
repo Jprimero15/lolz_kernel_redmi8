@@ -636,7 +636,7 @@ int ktd_hbm_set(enum backlight_hbm_mode hbm_mode)
 
 int ktd3137_brightness_set(int brightness)
 {
-	LOG_DBG("%s brightness = %d\n", __func__, brightness);
+//	LOG_DBG("%s brightness = %d\n", __func__, brightness);
 #if defined(PROJECT_OLIVE) || defined(PROJECT_OLIVELITE) || defined(PROJECT_OLIVEWOOD)
 	if ((brightness > 0) && (brightness <= LOWEST_BRIGHTNESS)) {
 		brightness = LOWEST_BRIGHTNESS;
@@ -644,7 +644,7 @@ int ktd3137_brightness_set(int brightness)
 	switch (brightness) {
 	case LOWEST_BRIGHTNESS:
 		brightness = brightness - 1;
-		LOG_DBG("%s The lowest brightness = %d\n", __func__, brightness);
+//		LOG_DBG("%s The lowest brightness = %d\n", __func__, brightness);
 		break;
 	}
 #endif
