@@ -423,9 +423,6 @@ enum {
 int hdd_validate_mcc_config(hdd_adapter_t *pAdapter, v_UINT_t staId,
                                 v_UINT_t arg1, v_UINT_t arg2, v_UINT_t arg3);
 
-#ifdef WLAN_FEATURE_PACKET_FILTERING
-int wlan_hdd_set_filter(hdd_adapter_t *pAdapter, tpPacketFilterCfg pRequest);
-#endif
 /**---------------------------------------------------------------------------
 
   \brief mem_alloc_copy_from_user_helper -
@@ -4790,7 +4787,7 @@ static int __iw_set_encodeext(struct net_device *dev,
        }
        else {
          /*Static wep, update the roam profile with the keys */
-          if(ext->key && (ext->key_len <= eCSR_SECURITY_WEP_KEYSIZE_MAX_BYTES) &&
+          if(ext->key != NULL && (ext->key_len <= eCSR_SECURITY_WEP_KEYSIZE_MAX_BYTES) &&
                                                                key_index < CSR_MAX_NUM_KEY) {
              vos_mem_copy(&pRoamProfile->Keys.KeyMaterial[key_index][0],ext->key,ext->key_len);
              pRoamProfile->Keys.KeyLength[key_index] = (v_U8_t)ext->key_len;
@@ -6155,13 +6152,16 @@ static int __iw_setint_getnone(struct net_device *dev,
         }
         case WE_SET_PKT_STATS_ENABLE_DISABLE:
         {
+#ifdef WLAN_LOGGING_SOCK_SVC_ENABLE
             hdd_context_t *pHddCtx = WLAN_HDD_GET_CTX(pAdapter);
             tAniWifiStartLog start_log;
             if (!pHddCtx->cfg_ini->wlanPerPktStatsLogEnable ||
                  !vos_isPktStatsEnabled())
             {
+#endif
                 hddLog(LOGE, FL("per pkt stats not enabled"));
                 return -EINVAL;
+#ifdef WLAN_LOGGING_SOCK_SVC_ENABLE
             }
             hddLog(LOG1, FL("Set Pkt Stats %d"), set_value);
 
@@ -6184,6 +6184,7 @@ static int __iw_setint_getnone(struct net_device *dev,
                 ret = -EINVAL;
             }
             break;
+#endif
         }
         case WE_SET_PROXIMITY_ENABLE:
         {
@@ -11155,9 +11156,9 @@ const struct iw_handler_def we_mon_handler_def = {
 
 int hdd_validate_mcc_config(hdd_adapter_t *pAdapter, v_UINT_t staId, v_UINT_t arg1, v_UINT_t arg2, v_UINT_t arg3)
 {
-    v_U32_t  cmd = 288; //Command to RIVA
+    v_U32_t __maybe_unused cmd = 288; //Command to RIVA
     hdd_context_t *pHddCtx = NULL;
-    tHalHandle hHal = WLAN_HDD_GET_HAL_CTX(pAdapter);
+    tHalHandle __maybe_unused hHal = WLAN_HDD_GET_HAL_CTX(pAdapter);
     pHddCtx = WLAN_HDD_GET_CTX(pAdapter);
     /*
      *configMccParam : specify the bit which needs to be modified

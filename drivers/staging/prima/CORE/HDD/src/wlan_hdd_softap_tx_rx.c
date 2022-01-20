@@ -1735,6 +1735,7 @@ VOS_STATUS hdd_softap_rx_packet_cbk( v_VOID_t *vosContext,
                                pAdapter->macAddressCurrent.bytes, 6) != 0) {
               VOS_TRACE(VOS_MODULE_ID_HDD_SAP_DATA, VOS_TRACE_LEVEL_ERROR,
                         "Packet is not destined to this address, dropping");
+	      pVosPacket->pSkb = NULL;
               kfree_skb(skb);
               pVosPacket = pNextVosPacket;
               continue;
@@ -1779,9 +1780,10 @@ VOS_STATUS hdd_softap_rx_packet_cbk( v_VOID_t *vosContext,
 
       if (pHddCtx->rx_wow_dump) {
          if (!(VOS_PKT_PROTO_TYPE_ARP & proto_type) &&
-             !(VOS_PKT_PROTO_TYPE_EAPOL & proto_type))
+             !(VOS_PKT_PROTO_TYPE_EAPOL & proto_type)) {
             hdd_log_ip_addr(skb);
             pHddCtx->rx_wow_dump = false;
+         }
       }
 
       if (WLAN_RX_BCMC_STA_ID == pRxMetaInfo->ucDesSTAId)

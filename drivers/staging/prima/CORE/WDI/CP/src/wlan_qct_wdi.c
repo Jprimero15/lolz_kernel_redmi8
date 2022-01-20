@@ -335,7 +335,11 @@ WDI_ReqProcFuncType  pfnReqProcTbl[WDI_MAX_UMAC_IND] =
   WDI_ProcessSetStaBcastKeyReq,        /* WDI_SET_STA_BCAST_KEY_REQ  */
   WDI_ProcessRemoveStaBcastKeyReq,     /* WDI_RMV_STA_BCAST_KEY_REQ  */
   WDI_ProcessSetMaxTxPowerReq,         /*WDI_SET_MAX_TX_POWER_REQ*/
+#ifdef WLAN_FEATURE_P2P
   WDI_ProcessP2PGONOAReq,              /* WDI_P2P_GO_NOTICE_OF_ABSENCE_REQ */
+#else
+  NULL,
+#endif
   /* PowerSave APIs */
   WDI_ProcessEnterImpsReq,         /* WDI_ENTER_IMPS_REQ  */
   WDI_ProcessExitImpsReq,          /* WDI_EXIT_IMPS_REQ  */
@@ -930,7 +934,11 @@ WDI_RspProcFuncType  pfnRspProcTbl[WDI_MAX_RESP] =
 
   WDI_ProcessTxCompleteInd,         /* WDI_HAL_TX_COMPLETE_IND  */
 
+#ifdef WLAN_FEATURE_P2P
   WDI_ProcessP2pNoaAttrInd,         /*WDI_HOST_NOA_ATTR_IND*/
+#else
+  NULL,
+#endif
 
 #ifdef FEATURE_WLAN_SCAN_PNO
   WDI_ProcessPrefNetworkFoundInd,   /* WDI_HAL_PREF_NETWORK_FOUND_IND */
@@ -946,7 +954,11 @@ WDI_RspProcFuncType  pfnRspProcTbl[WDI_MAX_RESP] =
 
   WDI_ProcessTxPerHitInd,               /* WDI_HAL_TX_PER_HIT_IND  */
 
+#ifdef WLAN_FEATURE_P2P
   WDI_ProcessP2pNoaStartInd,             /* WDI_NOA_START_IND */
+#else
+  NULL,
+#endif
 #ifdef FEATURE_WLAN_TDLS
   WDI_ProcessTdlsInd,                   /* WDI_HAL_TDLS_IND */
 #else
@@ -1023,8 +1035,6 @@ WDI_RspProcFuncType  pfnRspProcTbl[WDI_MAX_RESP] =
   WDI_ProcessGetCurrentAntennaIndexRsp,     /* WDI_ANTENNA_DIVERSITY_SELECTION_RSP */
 #ifdef WLAN_FEATURE_APFIND
   WDI_ProcessQRFPrefNetworkFoundInd,   /* WDI_HAL_QRF_PREF_NETWORK_FOUND_IND */
-#else
-  NULL,
 #endif
 };
 /*---------------------------------------------------------------------------
@@ -14802,6 +14812,7 @@ WDI_Status WDI_ProcessSetTxPowerReq
                        WDI_SET_TX_POWER_RESP);
 }
 
+#ifdef WLAN_FEATURE_P2P
 /**
  @brief Process P2P Notice Of Absence Request function (called when Main FSM
         allows it)
@@ -14888,6 +14899,7 @@ WDI_ProcessP2PGONOAReq
                        wdiP2PGONOAReqRspCb, pEventData->pUserData,
                        WDI_P2P_GO_NOTICE_OF_ABSENCE_RESP);
 }/*WDI_ProcessP2PGONOAReq*/
+#endif /* WLAN_FEATURE_P2P */
 
 #ifdef FEATURE_WLAN_TDLS
 
@@ -22803,6 +22815,7 @@ WDI_ProcessTXFailInd
 }
 #endif /* WLAN_FEATURE_RMC */
 
+#ifdef WLAN_FEATURE_P2P
 /**
 *@brief Process Noa Start Indication function (called when
         an indication of this kind is being received over the
@@ -22939,6 +22952,7 @@ WDI_ProcessP2pNoaAttrInd
 
   return WDI_STATUS_SUCCESS;
 }/*WDI_ProcessNoaAttrInd*/
+#endif
 
 /**
  @brief Process Tx PER Hit Indication function (called when
@@ -26335,11 +26349,13 @@ WDI_2_HAL_LINK_STATE
   case WDI_LINK_FINISH_CAL_STATE:
     return eSIR_LINK_FINISH_CAL_STATE;
 
+#ifdef WLAN_FEATURE_P2P
   case WDI_LINK_LISTEN_STATE:
     return eSIR_LINK_LISTEN_STATE;
 
   case WDI_LINK_SEND_ACTION_STATE:
     return eSIR_LINK_SEND_ACTION_STATE;
+#endif
 
 #ifdef WLAN_FEATURE_LFR_MBB
   case WDI_LINK_PRE_AUTH_REASSOC_STATE:
@@ -39870,6 +39886,7 @@ WDI_Status WDI_process_sap_auth_offload(
 
     return WDI_PostMainEvent(&gWDICb, WDI_REQUEST_EVENT, &wdiEventData);
 }
+#endif
 
 /**
  *  wdi_process_cap_tsf_req() - Send Capture tsf request to FW.
@@ -40219,4 +40236,3 @@ WDI_process_sw_pta_resp(WDI_ControlBlockType *wdi_ctx,
 	return WDI_STATUS_SUCCESS;
 }
 #endif /* FEATURE_WLAN_SW_PTA */
-#endif
