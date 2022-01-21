@@ -1797,10 +1797,10 @@ static ssize_t cpuset_write_resmask_wrapper(struct kernfs_open_file *of,
 #ifdef CONFIG_CPUSET_ASSIST
 	static struct cs_target cs_targets[] = {
 		/* Little-only cpusets go first */
-		{ "background",		"2-5"},
+		{ "background",		"4-5"},
 		{ "audio-app",		"2-5"},
-		{ "system-background", 	"2-5"},
-		{ "restricted",		"2-5"},
+		{ "system-background", 	"3-5"},
+		{ "restricted",		"3-5"},
 		{ "top-app",		"0-7"},
 		{ "foreground",		"0-7"},
 		{ "camera-daemon",	"0-7"},
@@ -2063,8 +2063,8 @@ static struct cftype files[] = {
 #ifdef CONFIG_UCLAMP_ASSIST
 struct ucl_param {
 	char *name;
-	char uclamp_min[3];
-	char uclamp_max[3];
+	char uclamp_min[5];
+	char uclamp_max[5];
 	u64  uclamp_latency_sensitive;
 	u64  uclamp_boosted;
 };
@@ -2077,13 +2077,13 @@ static void uclamp_set(struct kernfs_open_file *of,
 	const char *cs_name = cs->css.cgroup->kn->name;
 
 	static struct ucl_param tgts[] = {
-		{"audio-app",           "0",  "50",  0, 0},
-		{"top-app",             "35", "100", 0, 1},
-		{"foreground",          "0",  "100", 0, 1},
-		{"restricted",          "0",  "50",  0, 0},
-		{"background",          "0",  "50",  0, 0},
-		{"system-background",   "0",  "50",  0, 0},
-		{"camera-daemon",       "0",  "100", 0, 1},
+		{"audio-app",           "0",      "50",     0, 0},
+		{"top-app",             "12.50",  "100",    0, 1},
+		{"foreground",          "0",      "100",    0, 0},
+		{"restricted",          "0",      "37.50",  0, 0},
+		{"background",          "0",      "25",     0, 0},
+		{"system-background",   "0",      "37.50",  0, 0},
+		{"camera-daemon",       "0",      "100",    0, 1},
 	};
 
 	if (!strcmp(current->comm, "init")) {
