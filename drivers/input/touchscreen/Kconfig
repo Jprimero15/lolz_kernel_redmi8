@@ -1322,7 +1322,7 @@ config TOUCHSCREEN_RAYDIUM_CHIPSET
 	  If unsure, say N.
 
 config TOUCHSCREEN_FT5446
-       tristate "FocalTech touchscreens"
+       bool "FocalTech touchscreens"
        depends on I2C
        help
          Say Y here if you have a ft5446 touchscreen.
