@@ -29,6 +29,8 @@
 unsigned int __read_mostly freeze_timeout_msecs =
 	IS_ENABLED(CONFIG_ANDROID) ? MSEC_PER_SEC : 20 * MSEC_PER_SEC;
 
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+
 static int try_to_freeze_tasks(bool user_only)
 {
 	struct task_struct *g, *p;
@@ -190,6 +192,8 @@ int freeze_kernel_threads(void)
 void thaw_fingerprintd(void)
 {
 	struct task_struct *p;
+	const char Name[] = "android.hardware.biometrics.fingerprint";
+	const size_t szName = sizeof(Name) - 1;
 	bool fp_hidl_thawed, gx_fpd_thawed = false;
 
 	pm_freezing = false;
@@ -200,19 +204,14 @@ void thaw_fingerprintd(void)
 		if (fp_hidl_thawed && gx_fpd_thawed)
 			break;
 		if (!fp_hidl_thawed) {
-			if ((!memcmp(p->comm, "android.hardware.biometrics.fingerprint@2.1-service", 52)) ||
-				(!memcmp(p->comm,"android.hardware.biometrics.fingerprint@2.1-service.xiaomi_landtoni", 68)) ||
-				(!memcmp(p->comm,"android.hardware.biometrics.fingerprint@2.1-service.xiaomi_mi439", 65)) ||
-				(!memcmp(p->comm,"android.hardware.biometrics.fingerprint@2.1-service.xiaomi_ulysse", 66))) {
+			if (!strncmp(p->comm, Name, MIN(strlen(p->comm), szName))) {
 				__thaw_task(p);
 				fp_hidl_thawed = true;
 				continue;
 			}
 		}
 		if (!gx_fpd_thawed) {
-			if ((!memcmp(p->comm, "gx_fpd", 7)) ||
-				(!memcmp(p->comm,"land_gx_fpd", 12)) ||
-				(!memcmp(p->comm,"santoni_gx_fpd", 15))) {
+			if (!memcmp(p->comm, "gx_fpd", 7)) {
 				__thaw_task(p);
 				gx_fpd_thawed = true;
 				continue;
