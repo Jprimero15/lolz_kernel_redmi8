@@ -400,7 +400,8 @@ static int parse_options(struct super_block *sb, char *options)
 
 		switch (token) {
 		case Opt_gc_background:
-			pr_info("F2FS-fs: changing background GC mode not supported");
+			clear_opt(sbi, BG_GC);
+			clear_opt(sbi, FORCE_FG_GC);
 			break;
 		case Opt_disable_roll_forward:
 			set_opt(sbi, DISABLE_ROLL_FORWARD);
