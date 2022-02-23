@@ -25,7 +25,7 @@
 	interrupt-parent = <&wakegic>;
 
 	chosen {
-		bootargs = "sched_enable_hmp=1 kpti=0";
+		bootargs = "quiet kpti=0 rcu_nocbs=0-7 noirqdebug";
 	};
 
 	firmware: firmware {
@@ -114,17 +114,21 @@
 			compatible = "shared-dma-pool";
 			reusable;
 			alignment = <0 0x400000>;
-			size = <0 0x400000>;
+			size = <0 0x1000000>;
 		};
 
 		cont_splash_mem: splash_region@83000000 {
 			reg = <0x0 0x90000000 0x0 0x1400000>;
 		};
 
-		dump_mem: mem_dump_region {
+		/* global autoconfigured region for contiguous allocations */
+		linux,cma {
 			compatible = "shared-dma-pool";
+			alloc-ranges = <0 0x00000000 0 0xffffffff>;
 			reusable;
-			size = <0x400000>;
+			alignment = <0 0x400000>;
+			size = <0 0x4000000>;
+			linux,cma-default;
 		};
 	};
 
@@ -319,47 +323,6 @@
 	};
 
 	thermal_zones: thermal-zones {};
-
-	mem_dump {
-		compatible = "qcom,mem-dump";
-		memory-region = <&dump_mem>;
-
-		rpm_sw_dump {
-			qcom,dump-size = <0x28000>;
-			qcom,dump-id = <0xea>;
-		};
-
-		pmic_dump {
-			qcom,dump-size = <0x10000>;
-			qcom,dump-id = <0xe4>;
-		};
-
-		vsense_dump {
-			qcom,dump-size = <0x1000>;
-			qcom,dump-id = <0xe9>;
-		};
-
-		tmc_etf_dump {
-			qcom,dump-size = <0x10000>;
-			qcom,dump-id = <0xf0>;
-		};
-
-		tmc_etr_reg_dump {
-			qcom,dump-size = <0x1000>;
-			qcom,dump-id = <0x100>;
-		};
-
-		tmc_etf_reg_dump {
-			qcom,dump-size = <0x1000>;
-			qcom,dump-id = <0x101>;
-		};
-
-		misc_data_dump {
-			qcom,dump-size = <0x1000>;
-			qcom,dump-id = <0xe8>;
-		};
-
-	};
 
 	tsens0: tsens@4a8000 {
 		compatible = "qcom,msm8937-tsens";
