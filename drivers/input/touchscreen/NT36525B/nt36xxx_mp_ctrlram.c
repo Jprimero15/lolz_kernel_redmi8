@@ -24,6 +24,9 @@
 #include "nt36xxx.h"
 #include "nt36xxx_mp_ctrlram.h"
 
+#ifdef PROJECT_MI439
+#include <linux/sdm439.h>
+#endif
 
 #if NVT_TOUCH_MP
 
@@ -2039,19 +2042,29 @@ void nvt_mp_proc_deinit(void)
 
 #if NVT_LOCKDOWN
 
-#if defined(PROJECT_OLIVE) || defined(PROJECT_OLIVELITE) || defined(PROJECT_OLIVEWOOD)
+
+#if defined(PROJECT_OLIVES) || defined(PROJECT_MI439)
 extern char tp_lockdown_info[40];
 #endif
 
 static int nvt_tp_lock_down_info_show(struct seq_file *m, void *data)
 {
-
-#if defined(PROJECT_OLIVE) || defined(PROJECT_OLIVELITE) || defined(PROJECT_OLIVEWOOD)
+#ifdef PROJECT_MI439
+    if (sdm439_current_device == XIAOMI_OLIVES) {
+        NVT_LOG("nvt_tp_lock_down_info_show:%s\n", tp_lockdown_info);
+	    seq_printf(m, "%s\n", tp_lockdown_info);
+    } else {
+    	NVT_ERR("get tp_lockdown_info from LCM fail !");
+	    seq_printf(m, "47353201C3493200\n");   
+    }
+#else
+#ifdef PROJECT_OLIVES
 	NVT_LOG("nvt_tp_lock_down_info_show:%s\n", tp_lockdown_info);
 	seq_printf(m, "%s\n", tp_lockdown_info);
 #else
 	NVT_ERR("get tp_lockdown_info from LCM fail !");
 	seq_printf(m, "47353201C3493200\n");
+#endif
 #endif
 	return 0;
 }

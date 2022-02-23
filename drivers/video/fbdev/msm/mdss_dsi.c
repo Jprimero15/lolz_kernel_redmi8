@@ -29,6 +29,10 @@
 #include <linux/mdss_io_util.h>
 #include <linux/dma-buf.h>
 
+#ifdef PROJECT_MI439
+#include <linux/sdm439.h>
+#endif
+
 #include "mdss.h"
 #include "mdss_panel.h"
 #include "mdss_dsi.h"
@@ -2909,7 +2913,7 @@ u32 white_point_num_g;
 u32 white_point_num_b;
 #endif
 
-#if defined(PROJECT_OLIVE) || defined(PROJECT_OLIVELITE) || defined(PROJECT_OLIVEWOOD)
+#if defined(PROJECT_OLIVES) || defined(PROJECT_MI439)
 char tp_lockdown_info[40] = {0};
 #endif
 
@@ -2926,7 +2930,7 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 	char *wponit_str;
 #endif
 
-#if defined(PROJECT_OLIVE) || defined(PROJECT_OLIVELITE) || defined(PROJECT_OLIVEWOOD)
+#if defined(PROJECT_OLIVES) || defined(PROJECT_MI439)
 	char *tplock_str;
 #endif
 
@@ -2954,7 +2958,21 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 		}
 #endif
 
-#if defined(PROJECT_OLIVE) || defined(PROJECT_OLIVELITE) || defined(PROJECT_OLIVEWOOD)
+#ifdef PROJECT_MI439
+        if (sdm439_current_device == XIAOMI_OLIVES) {
+            tplock_str = strnstr(panel_cfg, ":tplock=", len);
+            if (!tplock_str) {
+                pr_err("%s:[tp lockdown info] tp lockdown info is not present in %s\n",
+                        __func__, panel_cfg);
+            } else {
+                snprintf(tp_lockdown_info, sizeof (tp_lockdown_info), "%c%c%c%c%c%c%c%c%0x%c%c%c%c%c%c%c", \
+                    tplock_str[8], tplock_str[9], tplock_str[10], tplock_str[11], tplock_str[12], tplock_str[13], tplock_str[14], tplock_str[15], \
+                    (tplock_str[16] - '0'), tplock_str[17], tplock_str[18], tplock_str[19], tplock_str[20], tplock_str[21], tplock_str[22], tplock_str[23]);
+                pr_err("[tp lockdown info] tp_lockdown_info = %s\n", tp_lockdown_info);
+            }
+        }
+#else
+#ifdef PROJECT_OLIVES
 		tplock_str = strnstr(panel_cfg, ":tplock=", len);
 		if (!tplock_str) {
 			pr_err("%s:[tp lockdown info] tp lockdown info is not present in %s\n",
@@ -2965,6 +2983,7 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 				(tplock_str[16] - '0'), tplock_str[17], tplock_str[18], tplock_str[19], tplock_str[20], tplock_str[21], tplock_str[22], tplock_str[23]);
 			pr_err("[tp lockdown info] tp_lockdown_info = %s\n", tp_lockdown_info);
 		}
+#endif
 #endif
 
 		/* check if any override parameters are set */

@@ -47,6 +47,8 @@
 #include <linux/platform_device.h>
 #include <linux/mm.h>
 
+#include <linux/sdm439.h>
+
 #include <asm/acpi.h>
 #include <asm/fixmap.h>
 #include <asm/cpu.h>
@@ -86,6 +88,10 @@ unsigned int cold_boot;
 EXPORT_SYMBOL(cold_boot);
 
 const char *machine_name;
+
+int sdm439_current_device = DEVICE_UNKNOWN;
+EXPORT_SYMBOL(sdm439_current_device);
+
 /*
  * Standard memory resources
  */
@@ -221,6 +227,11 @@ static void __init setup_machine_fdt(phys_addr_t dt_phys)
 	if (machine_name) {
 		dump_stack_set_arch_desc("%s (DT)", machine_name);
 		pr_info("Machine: %s\n", machine_name);
+		if (strncmp(machine_name, "PINE", 4) == 0) {
+			sdm439_current_device = XIAOMI_PINE;
+		} else if (strncmp(machine_name, "Olive", 5) == 0) {
+			sdm439_current_device = XIAOMI_OLIVES;
+		}
 	}
 }
 
