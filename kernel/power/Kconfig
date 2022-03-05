@@ -353,3 +353,4 @@ config CPU_PM
 config DEDUCE_WAKEUP_REASONS
 	bool
 	default y
+	depends on SUSPEND && !ARCH_SDM439
