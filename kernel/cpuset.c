@@ -2079,11 +2079,11 @@ static void uclamp_set(struct kernfs_open_file *of,
 	static struct ucl_param tgts[] = {
 		{"audio-app",           "0",    "50",     0, 0},
 		{"top-app",             "15",   "100",    0, 1},
-		{"foreground",          "0",    "45",     0, 0},
+		{"foreground",          "15",   "50",     0, 0},
 		{"restricted",          "0",    "35",     0, 0},
 		{"background",          "0",    "35",     0, 0},
 		{"system-background",   "0",    "35",     0, 0},
-		{"camera-daemon",       "15",   "100",    0, 1},
+		{"camera-daemon",       "50",   "100",    0, 1},
 	};
 
 	if (!strcmp(current->comm, "init")) {
