@@ -32,7 +32,6 @@
 #include <linux/idr.h>
 #include <linux/sysfs.h>
 #include <linux/debugfs.h>
-#include <linux/moduleparam.h>
 
 #include "zram_drv.h"
 
@@ -41,9 +40,7 @@ static DEFINE_IDR(zram_index_idr);
 static DEFINE_MUTEX(zram_index_mutex);
 
 static int zram_major;
-static char *default_compressor = CONFIG_ZRAM_DEF_COMP;
-
-module_param(default_compressor, charp, 0644);
+static const char *default_compressor = CONFIG_ZRAM_DEF_COMP;
 
 /* Module params (documentation at end) */
 static unsigned int num_devices = 1;
