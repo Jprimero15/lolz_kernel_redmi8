@@ -24,6 +24,7 @@
 #define CREATE_TRACE_POINTS
 #include "trace/events/msm_cam.h"
 
+#include <linux/using_oss_cam.h>
 
 #define MAX_ISP_V4l2_EVENTS 100
 #define MAX_ISP_REG_LIST 100
@@ -212,7 +213,11 @@ void msm_isp_get_timestamp(struct msm_isp_timestamp *time_stamp,
 		time_stamp->buf_time.tv_sec    = time_stamp->vt_time.tv_sec;
 		time_stamp->buf_time.tv_usec   = time_stamp->vt_time.tv_usec;
 	} else {
-		get_monotonic_boottime(&ts);
+                if (get_using_oss_cam()) {
+		      get_monotonic_boottime(&ts);
+      		} else {
+		      ktime_get_ts(&ts);
+		}
 		time_stamp->buf_time.tv_sec    = ts.tv_sec;
 		time_stamp->buf_time.tv_usec   = ts.tv_nsec/1000;
 	}
