@@ -130,19 +130,18 @@ static char *initcall_command_line;
 static char *execute_command;
 static char *ramdisk_execute_command;
 
-static unsigned int android_vndk_version = 29; // Default VNDK of olives
+static unsigned int using_oss_cam = 1; // Default to oss cam hal
 
-static int __init set_android_vndk_version(char *val)
+static int __init set_using_oss_cam(char *val)
 {
-	get_option(&val, &android_vndk_version);
+	get_option(&val, &using_oss_cam);
 	return 0;
 }
+__setup("oss.cam_hal=", set_using_oss_cam);
 
-__setup("androidboot.vndk_version=", set_android_vndk_version);
-
-unsigned int get_android_vndk_version(void)
+unsigned int get_using_oss_cam(void)
 {
-	return android_vndk_version;
+	return using_oss_cam;
 }
 
 /*
