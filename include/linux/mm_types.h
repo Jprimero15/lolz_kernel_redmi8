@@ -374,6 +374,9 @@ struct vm_area_struct {
 	seqcount_t vm_sequence;
 	atomic_t vm_ref_count;		/* see vma_get(), vma_put() */
 #endif
+#ifdef CONFIG_UKSM
+        struct vma_slot *uksm_vma_slot;
+#endif
 };
 
 struct core_thread {
