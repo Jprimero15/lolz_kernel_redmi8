@@ -37,7 +37,6 @@
 #include <linux/regulator/driver.h>
 #include <linux/regulator/machine.h>
 #include <linux/regulator/of_regulator.h>
-#include <linux/regulator/cpr-regulator.h>
 #include <soc/qcom/scm.h>
 
 /* Register Offsets for RB-CPR and Bit Definitions */
@@ -6187,7 +6186,7 @@ static struct platform_driver cpr_regulator_driver = {
  * This initialization function should be called in systems in which driver
  * registration ordering must be controlled precisely.
  */
-int __init cpr_regulator_init(void)
+static int __init cpr_regulator_init(void)
 {
 	static bool initialized;
 
@@ -6199,7 +6198,6 @@ int __init cpr_regulator_init(void)
 	cpr_debugfs_base_init();
 	return platform_driver_register(&cpr_regulator_driver);
 }
-EXPORT_SYMBOL(cpr_regulator_init);
 
 static void __exit cpr_regulator_exit(void)
 {
