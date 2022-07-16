@@ -986,7 +986,6 @@
 		qcom,bark-time = <11000>;
 		qcom,pet-time = <9360>;
 		qcom,ipi-ping;
-		qcom,wakeup-enable;
 		status = "okay";
 		qcom,scandump-size = <0x40000>;
 	};
