@@ -56,8 +56,11 @@ const char * const mem_sleep_labels[] = {
 const char *mem_sleep_states[PM_SUSPEND_MAX];
 
 suspend_state_t mem_sleep_current = PM_SUSPEND_FREEZE;
+#ifdef CONFIG_ARCH_SDM439
+static suspend_state_t mem_sleep_default = PM_SUSPEND_FREEZE;
+#else
 static suspend_state_t mem_sleep_default = PM_SUSPEND_MEM;
-
+#endif
 unsigned int pm_suspend_global_flags;
 EXPORT_SYMBOL_GPL(pm_suspend_global_flags);
 
