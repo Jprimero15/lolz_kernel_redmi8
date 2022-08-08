@@ -3,6 +3,7 @@
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 #include <asm/setup.h>
+#include <linux/dynpart.h>
 
 static char new_command_line[COMMAND_LINE_SIZE];
 
@@ -87,7 +88,10 @@ static int __init proc_cmdline_init(void)
 	 */
 	patch_safetynet_flags(new_command_line);
 
-	patch_sar_flags(new_command_line);
+	// Patch SAR Flags only if using dynamic partitions
+	if (get_using_dynpart()) {
+	     patch_sar_flags(new_command_line);
+	}
 
 	proc_create("cmdline", 0, NULL, &cmdline_proc_fops);
 	return 0;
