@@ -131,6 +131,7 @@ static char *execute_command;
 static char *ramdisk_execute_command;
 
 static unsigned int using_oss_cam = 1; // Default to oss cam hal
+static unsigned int using_dynpart = 1; // default to dynamic partitions
 
 static int __init set_using_oss_cam(char *val)
 {
@@ -142,6 +143,18 @@ __setup("oss.cam_hal=", set_using_oss_cam);
 unsigned int get_using_oss_cam(void)
 {
 	return using_oss_cam;
+}
+
+static int __init set_using_dynpart(char *val)
+{
+        get_option(&val, &using_dynpart);
+        return 0;
+}
+__setup("dynamic_partitions=", set_using_dynpart);
+
+unsigned int get_using_dynpart(void)
+{
+        return using_dynpart;
 }
 
 /*
