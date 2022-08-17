@@ -36,6 +36,7 @@
 	qcom,chg-term-current-ma = <(-200)>;
 	qcom,float-option = <1>;
 	qcom,auto-recharge-soc = <99>;
+	qcom,flash-disable-soc = <0>;
 	/delete-property/ qcom,sw-jeita-enable;
 	qcom,hw-jeita-enable;
 	qcom,fv-max-uv = <4400000>;

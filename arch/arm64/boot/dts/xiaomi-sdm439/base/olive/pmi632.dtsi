@@ -1,7 +1,3 @@
-&pmi632_charger {
-	qcom,flash-disable-soc = <5>;
-};
-
 &pmi632_qg {
 	qcom,qg-iterm-ma = <350>;
 };
