@@ -76,7 +76,7 @@
 };
 
 &thermal_zones {
-	pmi-vbat-lvl0 {
+	pmi632-vbat-lvl0 {
 		cooling-maps {
 			vbat_map0 {
 				trip = <&pmi632_vbat_lvl0>;
