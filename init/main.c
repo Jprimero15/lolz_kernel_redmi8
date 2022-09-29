@@ -130,8 +130,8 @@ static char *initcall_command_line;
 static char *execute_command;
 static char *ramdisk_execute_command;
 
-static unsigned int using_oss_cam = 1; // Default to oss cam hal
-static unsigned int using_dynpart = 1; // default to dynamic partitions
+static unsigned int using_oss_cam = 0; // Default to prebuit cam hal
+static unsigned int using_dynpart = 0; // default to Normal partitions
 
 static int __init set_using_oss_cam(char *val)
 {

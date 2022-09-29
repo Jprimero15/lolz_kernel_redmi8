@@ -89,7 +89,7 @@ static int __init proc_cmdline_init(void)
 	patch_safetynet_flags(new_command_line);
 
 	// Patch SAR Flags only if using dynamic partitions
-	if (get_using_dynpart()) {
+	if (get_using_dynpart() == 1) {
 	     patch_sar_flags(new_command_line);
 	}
 
