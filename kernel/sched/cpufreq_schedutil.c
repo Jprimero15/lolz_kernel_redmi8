@@ -801,7 +801,7 @@ static int sugov_init(struct cpufreq_policy *policy)
 					CONFIG_SCHEDUTIL_DOWN_RATE_LIMIT_LITTLE;
 	}
 
-	tunables->iowait_boost_enable = true;
+	tunables->iowait_boost_enable = false;
 
 	policy->governor_data = sg_policy;
 	sg_policy->tunables = tunables;
