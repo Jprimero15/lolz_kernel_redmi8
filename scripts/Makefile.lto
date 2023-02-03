@@ -75,7 +75,7 @@ endif
 	# shut up lots of warnings for the compat syscalls
 	LTO_CFLAGS += $(call cc-disable-warning,attribute-alias,)
 
-	LTO_FINAL_CFLAGS += ${LTO_CFLAGS} -fwhole-program
+	LTO_FINAL_CFLAGS += ${LTO_CFLAGS} -fwhole-program -flinker-output=nolto-rel
 
 ifdef CONFIG_LTO_DEBUG
 	LTO_FINAL_CFLAGS += -fdump-ipa-cgraph -fdump-ipa-inline-details
