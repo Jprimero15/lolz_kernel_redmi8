@@ -899,7 +899,7 @@ DISABLE_LTO_CLANG := -fno-lto
 export DISABLE_LTO_CLANG
 endif
 
-ifdef CONFIG_LTO
+ifdef CONFIG_LTO_CLANG
 LTO_CFLAGS	:= $(lto-clang-flags)
 KBUILD_CFLAGS	+= $(LTO_CFLAGS)
 
