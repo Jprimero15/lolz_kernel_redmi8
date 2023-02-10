@@ -63,6 +63,7 @@
 #include <linux/kthread.h>
 #include <linux/dma-mapping.h>
 #include "focaltech_common.h"
+#include <linux/hqsysfs.h>
 
 /*****************************************************************************
 * Private constant and macro definitions using #define
