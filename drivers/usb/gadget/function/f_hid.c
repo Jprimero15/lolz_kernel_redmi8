@@ -576,8 +576,7 @@ static void hidg_destroy(struct kref *kref)
 {
 	struct f_hidg *hidg = container_of(kref, struct f_hidg, kref);
 
-	kfree(hidg->report_desc);
-	kfree(hidg);
+	put_device(&hidg->dev);
 }
 
 static int f_hidg_release(struct inode *inode, struct file *fd)
