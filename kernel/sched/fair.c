@@ -4603,6 +4603,14 @@ static inline int util_fits_cpu(unsigned long util,
 	return fits;
 }
 
+static inline int task_fits_cpu(struct task_struct *p, int cpu)
+{
+	unsigned long uclamp_min = uclamp_eff_value(p, UCLAMP_MIN);
+	unsigned long uclamp_max = uclamp_eff_value(p, UCLAMP_MAX);
+	unsigned long util = task_util_est(p);
+	return util_fits_cpu(util, uclamp_min, uclamp_max, cpu);
+}
+
 static inline bool task_fits_max(struct task_struct *p, int cpu)
 {
 #ifdef CONFIG_SCHED_WALT
@@ -4624,7 +4632,7 @@ static inline bool task_fits_max(struct task_struct *p, int cpu)
 			return false;
 	}
 
-	return task_fits_capacity(p, capacity, cpu);
+        return task_fits_cpu(p, cpu);
 #else
 	return false;
 #endif
@@ -4639,7 +4647,7 @@ static inline bool task_demand_fits(struct task_struct *p, int cpu)
 	if (capacity == max_capacity)
 		return true;
 
-	return task_fits_capacity(p, capacity, cpu);
+        return task_fits_cpu(p, cpu);
 #else
 	return false;
 #endif
@@ -4714,7 +4722,7 @@ static inline void update_misfit_status(struct task_struct *p, struct rq *rq)
 #ifdef CONFIG_SCHED_WALT
 	if (task_fits_max(p, cpu_of(rq))) {
 #else
-        if (task_fits_capacity(p, cpu_of(rq))) {
+	if (task_fits_cpu(p, cpu_of(rq))) {
 #endif
 		rq->misfit_task_load = 0;
 		return;
