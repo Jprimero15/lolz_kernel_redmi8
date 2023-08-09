@@ -26,7 +26,7 @@
 #include <linux/mfd/ktd3136.h>
 
 #ifdef PROJECT_MI439
-#include <linux/sdm439.h>
+#include <linux/mi439-mach.h>
 #endif
 
 #include "mdss_dsi.h"
@@ -487,7 +487,7 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 				}
 			}
 #ifdef PROJECT_MI439
-            if(sdm439_current_device == XIAOMI_OLIVES) {
+            if(mi439_mach_get_family() == MACH_FAMILY_OLIVE) {
                 if (is_focal_tp) {
                     lcd_call_tp_reset(0);
                     gpio_set_value((ctrl_pdata->rst_gpio), pdata->panel_info.rst_seq[0]);
@@ -556,7 +556,7 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 #endif
 #endif
 #ifdef PROJECT_MI439
-            if(sdm439_current_device == XIAOMI_OLIVES) {
+            if(mi439_mach_get_family() == MACH_FAMILY_OLIVE) {
                 rf_panel_name += strlen(":qcom,");
                 pr_info(" %s res=%d\n", rf_panel_name, strncmp(rf_panel_name, "mdss_dsi_nvt36525b_hdplus_video_c3i", strlen("mdss_dsi_nvt36525b_hdplus_video_c3i")));
                 if (!strncmp(rf_panel_name, "mdss_dsi_nvt36525b_hdplus_video_c3i", strlen("mdss_dsi_nvt36525b_hdplus_video_c3i"))) {
@@ -589,7 +589,7 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 #endif
 #endif
 #ifdef PROJECT_MI439
-            if(sdm439_current_device == XIAOMI_OLIVES) {
+            if(mi439_mach_get_family() == MACH_FAMILY_OLIVE) {
                 if (is_ilitek_tp) {
                     pr_err("%s:  ILITEK  LCD Call TP Reset start! \n", __func__);
                     ilitek_call_resume_work();
@@ -661,7 +661,7 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 			gpio_free(ctrl_pdata->disp_en_gpio);
 		}
 #ifdef PROJECT_MI439
-        gpio_set_value((ctrl_pdata->rst_gpio), (sdm439_current_device == XIAOMI_PINE) ? 0 : 1);
+        gpio_set_value((ctrl_pdata->rst_gpio), (mi439_mach_get_family() == MACH_FAMILY_PINE) ? 0 : 1);
 #else
 #ifdef PROJECT_PINE
 		gpio_set_value((ctrl_pdata->rst_gpio), 0);

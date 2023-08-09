@@ -30,7 +30,7 @@
 #include <linux/dma-buf.h>
 
 #ifdef PROJECT_MI439
-#include <linux/sdm439.h>
+#include <linux/mi439-mach.h>
 #endif
 
 #include "mdss.h"
@@ -2960,7 +2960,7 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 #endif
 
 #ifdef PROJECT_MI439
-        if (sdm439_current_device == XIAOMI_OLIVES) {
+        if (mi439_mach_get_family() == MACH_FAMILY_OLIVE) {
             tplock_str = strnstr(panel_cfg, ":tplock=", len);
             if (!tplock_str) {
                 pr_err("%s:[tp lockdown info] tp lockdown info is not present in %s\n",

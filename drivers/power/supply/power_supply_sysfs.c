@@ -18,7 +18,7 @@
 #include <linux/stat.h>
 
 #ifdef PROJECT_MI439
-#include <linux/sdm439.h>
+#include <linux/mi439-mach.h>
 #endif
 
 #include "power_supply.h"
@@ -110,7 +110,7 @@ static ssize_t power_supply_show_property(struct device *dev,
 	}
 
 #ifdef PROJECT_MI439
-    if (sdm439_current_device == XIAOMI_OLIVES) {
+    if (mi439_mach_get_family() == MACH_FAMILY_OLIVE) {
         if (value.intval == POWER_SUPPLY_TYPE_USB_PD) {
             ret = power_supply_get_property(psy, off, &value);
 

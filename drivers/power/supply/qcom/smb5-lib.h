@@ -22,7 +22,7 @@
 #include <linux/alarmtimer.h>
 
 #ifdef PROJECT_MI439
-#include <linux/sdm439.h>
+#include <linux/mi439-mach.h>
 #endif
 
 #include "storm-watch.h"
@@ -89,9 +89,9 @@ enum print_reason {
 #define SDP_CURRENT_UA			500000
 #define CDP_CURRENT_UA			1000000
 #ifdef PROJECT_MI439
-#define DCP_CURRENT_UA			((sdm439_current_device == XIAOMI_PINE) ? 2000000 : 3000000)
-#define HVDCP_CURRENT_UA		((sdm439_current_device == XIAOMI_PINE) ? 2000000 : 3000000)
-#define TYPEC_HIGH_CURRENT_UA		((sdm439_current_device == XIAOMI_PINE) ? 2000000 : 3000000)
+#define DCP_CURRENT_UA			((mi439_mach_get_family() == MACH_FAMILY_PINE) ? 2000000 : 3000000)
+#define HVDCP_CURRENT_UA		((mi439_mach_get_family() == MACH_FAMILY_PINE) ? 2000000 : 3000000)
+#define TYPEC_HIGH_CURRENT_UA		((mi439_mach_get_family() == MACH_FAMILY_PINE) ? 2000000 : 3000000)
 #else
 #ifdef PROJECT_PINE
 #define DCP_CURRENT_UA			2000000

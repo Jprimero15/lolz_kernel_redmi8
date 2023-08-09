@@ -17,7 +17,7 @@
 #include <linux/bitops.h>
 
 #ifdef PROJECT_MI439
-#include <linux/sdm439.h>
+#include <linux/mi439-mach.h>
 #endif
 
 #define CHGR_BASE	0x1000
@@ -322,7 +322,7 @@ enum {
 #define TYPE_C_SNK_STATUS_REG			(TYPEC_BASE + 0x06)
 
 #ifdef PROJECT_MI439
-#define DETECTED_SRC_TYPE_MASK ((sdm439_current_device == XIAOMI_PINE) ? GENMASK(3, 0) : GENMASK(6, 0))
+#define DETECTED_SRC_TYPE_MASK ((mi439_mach_get_family() == MACH_FAMILY_PINE) ? GENMASK(3, 0) : GENMASK(6, 0))
 #else
 #ifdef PROJECT_OLIVES
 #define DETECTED_SRC_TYPE_MASK			GENMASK(6, 0)

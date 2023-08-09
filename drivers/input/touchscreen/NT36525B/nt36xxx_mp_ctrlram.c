@@ -25,7 +25,7 @@
 #include "nt36xxx_mp_ctrlram.h"
 
 #ifdef PROJECT_MI439
-#include <linux/sdm439.h>
+#include <linux/mi439-mach.h>
 #endif
 
 #if NVT_TOUCH_MP
@@ -2050,7 +2050,7 @@ extern char tp_lockdown_info[40];
 static int nvt_tp_lock_down_info_show(struct seq_file *m, void *data)
 {
 #ifdef PROJECT_MI439
-    if (sdm439_current_device == XIAOMI_OLIVES) {
+    if (mi439_mach_get_family() == MACH_FAMILY_OLIVE) {
         NVT_LOG("nvt_tp_lock_down_info_show:%s\n", tp_lockdown_info);
 	    seq_printf(m, "%s\n", tp_lockdown_info);
     } else {

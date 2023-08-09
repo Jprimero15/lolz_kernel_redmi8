@@ -28,7 +28,7 @@
 #include <linux/qpnp/qpnp-revid.h>
 
 #ifdef PROJECT_MI439
-#include <linux/sdm439.h>
+#include <linux/mi439-mach.h>
 #endif
 
 #define QPNP_LCDB_REGULATOR_DRIVER_NAME		"qcom,qpnp-lcdb-regulator"
@@ -618,11 +618,13 @@ static int qpnp_lcdb_ttw_enter(struct qpnp_lcdb *lcdb)
 	if (rc < 0)
 		return rc;
 
-#ifdef PROJECT_PINE
-	val = 0;
-#else
-	val = 2;
-#endif
+
+        if (mi439_mach_get_family() == MACH_FAMILY_OLIVE) {
+       		val = 2;
+	} else {
+	        val = 0;
+        }
+
 	rc = qpnp_lcdb_write(lcdb, lcdb->base + LCDB_PWRUP_PWRDN_CTL_REG,
 			     &val, 1);
 	if (rc < 0)
@@ -1382,7 +1384,7 @@ static int qpnp_lcdb_ldo_regulator_disable(struct regulator_dev *rdev)
 
 	mutex_lock(&lcdb->lcdb_mutex);
 #ifdef PROJECT_MI439
-	if (sdm439_current_device == XIAOMI_OLIVES && ((ilitek_gesture_flag != true) && (nvt_gesture_flag != true) && (fts_gesture_flag != true)))
+	if (mi439_mach_get_family() == MACH_FAMILY_OLIVE && ((ilitek_gesture_flag != true) && (nvt_gesture_flag != true) && (fts_gesture_flag != true)))
 		rc = qpnp_lcdb_disable(lcdb);
 #else
 #ifdef PROJECT_OLIVES
@@ -1480,7 +1482,7 @@ static int qpnp_lcdb_ncp_regulator_disable(struct regulator_dev *rdev)
 
 	mutex_lock(&lcdb->lcdb_mutex);
 #ifdef PROJECT_MI439
-	if (sdm439_current_device == XIAOMI_OLIVES && ((ilitek_gesture_flag != true) && (nvt_gesture_flag != true) && (fts_gesture_flag != true)))
+	if (mi439_mach_get_family() == MACH_FAMILY_OLIVE && ((ilitek_gesture_flag != true) && (nvt_gesture_flag != true) && (fts_gesture_flag != true)))
     	rc = qpnp_lcdb_disable(lcdb);
 #else
 #ifdef PROJECT_OLIVES

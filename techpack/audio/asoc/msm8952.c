@@ -39,7 +39,7 @@
 #define PMIC_INT_ANALOG_CODEC "analog-codec"
 
 #ifdef PROJECT_MI439
-#include <linux/sdm439.h>
+#include <linux/mi439-mach.h>
 #endif
 
 enum btsco_rates {
@@ -365,7 +365,7 @@ int is_ext_spk_gpio_support(struct platform_device *pdev,
 static int enable_spk_ext_pa(struct snd_soc_codec *codec, int enable)
 {
 #ifdef PROJECT_MI439
-    if (sdm439_current_device == XIAOMI_OLIVES) {
+    if (mi439_mach_get_family() == MACH_FAMILY_OLIVE) {
         if(enable) {
 		    aw87519_audio_speaker();
 	    } else {
@@ -1102,7 +1102,7 @@ static int msm_vi_feed_tx_ch_put(struct snd_kcontrol *kcontrol,
 static int ext_sdm439_spk_amp_get(struct snd_kcontrol *kcontrol,
 		struct snd_ctl_elem_value *ucontrol)
 {
-    if (sdm439_current_device == XIAOMI_PINE) {
+    if (mi439_mach_get_family() == MACH_FAMILY_PINE) {
         ucontrol->value.integer.value[0] = aw87329_kspk_control;
         pr_debug("%s: aw87329_kspk_control = %d\n", __func__,
             aw87329_kspk_control);
@@ -1117,7 +1117,7 @@ static int ext_sdm439_spk_amp_get(struct snd_kcontrol *kcontrol,
 static int ext_sdm439_spk_amp_put(struct snd_kcontrol *kcontrol,
 		struct snd_ctl_elem_value *ucontrol)
 {
-    if (sdm439_current_device == XIAOMI_PINE) {
+    if (mi439_mach_get_family() == MACH_FAMILY_PINE) {
         if(ucontrol->value.integer.value[0] == aw87329_kspk_control){
             return 1;
         }
@@ -1148,7 +1148,7 @@ static int ext_sdm439_spk_amp_put(struct snd_kcontrol *kcontrol,
 static int ext_sdm439_rcv_amp_get(struct snd_kcontrol *kcontrol,
 		struct snd_ctl_elem_value *ucontrol)
 {
-    if (sdm439_current_device == XIAOMI_PINE) {
+    if (mi439_mach_get_family() == MACH_FAMILY_PINE) {
         ucontrol->value.integer.value[0] = aw87329_drcv_control;
         pr_debug("%s: aw87329_drcv_control = %d\n", __func__,
             aw87329_drcv_control);
@@ -1163,7 +1163,7 @@ static int ext_sdm439_rcv_amp_get(struct snd_kcontrol *kcontrol,
 static int ext_sdm439_rcv_amp_put(struct snd_kcontrol *kcontrol,
 		struct snd_ctl_elem_value *ucontrol)
 {
-    if (sdm439_current_device == XIAOMI_PINE) {
+    if (mi439_mach_get_family() == MACH_FAMILY_PINE) {
         aw87329_drcv_control = ucontrol->value.integer.value[0];
         if(ucontrol->value.integer.value[0] == aw87329_drcv_control){
             return 1;

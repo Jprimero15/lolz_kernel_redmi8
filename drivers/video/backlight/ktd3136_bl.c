@@ -22,7 +22,7 @@
 #include <linux/platform_device.h>
 
 #ifdef PROJECT_MI439
-#include <linux/sdm439.h>
+#include <linux/mi439-mach.h>
 #endif
 
 struct ktd3137_chip *bkl_chip;
@@ -642,7 +642,7 @@ int ktd3137_brightness_set(int brightness)
 {
 //	LOG_DBG("%s brightness = %d\n", __func__, brightness);
 #ifdef PROJECT_MI439
-    if (sdm439_current_device == XIAOMI_OLIVES) {
+    if (mi439_mach_get_family() == MACH_FAMILY_OLIVE) {
         if ((brightness > 0) && (brightness <= LOWEST_BRIGHTNESS)) {
             brightness = LOWEST_BRIGHTNESS;
         };
