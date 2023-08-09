@@ -3,10 +3,8 @@
 #include <linux/init.h>
 #include <linux/of.h>
 #include <linux/printk.h>
-#include <xiaomi-sdm439/mach.h>
-#if IS_ENABLED(CONFIG_HQ_SYSFS_SUPPORT_MI439)
-#include "../hqsysfs/hqsys_pcba.h"
-#endif
+#include "mach.h"
+#include "hqsys_pcba.h"
 
 typedef struct xiaomi_sdm439_mach_info {
 	enum xiaomi_sdm439_mach_family_types mach_family;
@@ -48,7 +46,6 @@ static void xiaomi_sdm439_mach_set_machine(enum xiaomi_sdm439_mach_types mach)
 	saved_mach = mach;
 }
 
-#if IS_ENABLED(CONFIG_HQ_SYSFS_SUPPORT_MI439)
 void xiaomi_sdm439_mach_notify_hq_pcba_config(PCBA_CONFIG hq_pcba)
 {
 	switch (hq_pcba) {
@@ -130,7 +127,6 @@ void xiaomi_sdm439_mach_notify_hq_pcba_config(PCBA_CONFIG hq_pcba)
 	}
 }
 EXPORT_SYMBOL(xiaomi_sdm439_mach_notify_hq_pcba_config);
-#endif
 
 static int xiaomi_sdm439_mach_early_detect(void) {
 	if (of_machine_is_compatible(xiaomi_sdm439_mach_table[XIAOMI_SDM439_MACH_PINE].of_compatible))
