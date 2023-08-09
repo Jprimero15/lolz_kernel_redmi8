@@ -4,8 +4,8 @@
 enum xiaomi_sdm439_mach_family_types {
 	XIAOMI_SDM439_MACH_FAMILY_UNKNOWN = 0,
 
-	XIAOMI_SDM439_MACH_FAMILY_PINE,
-	XIAOMI_SDM439_MACH_FAMILY_OLIVE,
+	MACH_FAMILY_PINE,
+	MACH_FAMILY_OLIVE,
 
 	XIAOMI_SDM439_MACH_FAMILY_MAX,
 };
@@ -21,7 +21,7 @@ enum xiaomi_sdm439_mach_types {
 	XIAOMI_SDM439_MACH_MAX,
 };
 
-extern enum xiaomi_sdm439_mach_family_types xiaomi_sdm439_mach_get_family(void);
+extern enum xiaomi_sdm439_mach_family_types mi439_mach_get_family(void);
 extern enum xiaomi_sdm439_mach_types xiaomi_sdm439_mach_get(void);
 
 #endif

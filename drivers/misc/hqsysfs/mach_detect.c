@@ -3,7 +3,7 @@
 #include <linux/init.h>
 #include <linux/of.h>
 #include <linux/printk.h>
-#include "mach.h"
+#include <linux/mi439-mach.h>
 #include "hqsys_pcba.h"
 
 typedef struct xiaomi_sdm439_mach_info {
@@ -15,23 +15,23 @@ typedef struct xiaomi_sdm439_mach_info {
 
 static const xiaomi_sdm439_mach_info_t xiaomi_sdm439_mach_table[XIAOMI_SDM439_MACH_MAX] = {
 	// Family PINE
-	[XIAOMI_SDM439_MACH_PINE] = {XIAOMI_SDM439_MACH_FAMILY_PINE, "xiaomi,pine", "pine", "Redmi 7A"},
+	[XIAOMI_SDM439_MACH_PINE] = {MACH_FAMILY_PINE, "xiaomi,pine", "pine", "Redmi 7A"},
 
 	// Family OLIVE
-	[XIAOMI_SDM439_MACH_OLIVE] = {XIAOMI_SDM439_MACH_FAMILY_OLIVE, "xiaomi,olive", "olive", "Redmi 8"},
-	[XIAOMI_SDM439_MACH_OLIVELITE] = {XIAOMI_SDM439_MACH_FAMILY_OLIVE, "xiaomi,olive", "olivelite", "Redmi 8A"},
-	[XIAOMI_SDM439_MACH_OLIVEWOOD] = {XIAOMI_SDM439_MACH_FAMILY_OLIVE, "xiaomi,olive", "olivewood", "Redmi 8A Dual"},
+	[XIAOMI_SDM439_MACH_OLIVE] = {MACH_FAMILY_OLIVE, "xiaomi,olive", "olive", "Redmi 8"},
+	[XIAOMI_SDM439_MACH_OLIVELITE] = {MACH_FAMILY_OLIVE, "xiaomi,olive", "olivelite", "Redmi 8A"},
+	[XIAOMI_SDM439_MACH_OLIVEWOOD] = {MACH_FAMILY_OLIVE, "xiaomi,olive", "olivewood", "Redmi 8A Dual"},
 };
 
 static enum xiaomi_sdm439_mach_types saved_mach = XIAOMI_SDM439_MACH_UNKNOWN;
 static struct kobject *xiaomi_sdm439_mach_kobj;
 
-enum xiaomi_sdm439_mach_family_types xiaomi_sdm439_mach_get_family(void) {
+enum xiaomi_sdm439_mach_family_types mi439_mach_get_family(void) {
 	if (!saved_mach)
 		return XIAOMI_SDM439_MACH_FAMILY_UNKNOWN;
 	return xiaomi_sdm439_mach_table[saved_mach].mach_family;
 }
-EXPORT_SYMBOL(xiaomi_sdm439_mach_get_family);
+EXPORT_SYMBOL(mi439_mach_get_family);
 
 enum xiaomi_sdm439_mach_types xiaomi_sdm439_mach_get(void) {
 	return saved_mach;
