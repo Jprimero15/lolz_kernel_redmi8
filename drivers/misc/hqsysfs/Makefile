@@ -16,5 +16,6 @@ obj-y := hqsysfs.o
 obj-y += hqsys_misc.o
 obj-y += hqsys_pcba.o
 obj-y += fm_con.o
+obj-y += mach_detect.o
 #obj-y += hqsys_emmc_info.o
 #obj-y += hqsys_cam_info.o
