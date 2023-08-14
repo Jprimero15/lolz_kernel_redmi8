@@ -1176,7 +1176,7 @@ static ssize_t cabc_store(struct device *dev,
 
 end:
 	mutex_unlock(&mfd->mdss_sysfs_lock);
-	return ret < 0 ? ret : len;
+	return len;
 }
 
 static ssize_t cabc_show(struct device *dev,
@@ -1246,7 +1246,7 @@ static ssize_t color_enhance_store(struct device *dev,
 
 end:
 	mutex_unlock(&mfd->mdss_sysfs_lock);
-	return ret < 0 ? ret : len;
+	return len;
 }
 
 static ssize_t color_enhance_show(struct device *dev,
