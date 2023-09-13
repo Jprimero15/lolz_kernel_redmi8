@@ -761,7 +761,7 @@ static DEFINE_MUTEX(uclamp_mutex);
 unsigned int sysctl_sched_uclamp_util_min;
 
 /* Max allowed maximum utilization */
-unsigned int sysctl_sched_uclamp_util_max = SCHED_CAPACITY_SCALE;
+unsigned int sysctl_sched_uclamp_util_max = 100;
 
 /*
  * Ignore uclamp_max for tasks if
