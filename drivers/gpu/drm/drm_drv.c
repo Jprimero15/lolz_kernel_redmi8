@@ -517,7 +517,7 @@ int drm_dev_init(struct drm_device *dev,
 
 	kthread_init_worker(&dev->bridge_enable_worker);
 	dev->bridge_enable_task =
-			kthread_run_perf_critical(kthread_worker_fn,
+			kthread_run(kthread_worker_fn,
 						  &dev->bridge_enable_worker,
 						  "drm_bridge_enable");
 	if (IS_ERR(dev->bridge_enable_task)) {
