@@ -122,8 +122,7 @@ void cpuidle_use_deepest_state(bool enable)
 
 	preempt_disable();
 	dev = cpuidle_get_device();
-	if (dev)
-		dev->use_deepest_state = enable;
+	dev->use_deepest_state = enable;
 	preempt_enable();
 }
 
