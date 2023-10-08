@@ -166,7 +166,7 @@ static int __init setup_test_suspend(char *value)
 			return 1;
 	}
 
-	for (i = PM_SUSPEND_MIN; i < PM_SUSPEND_MAX; i++)
+	for (i = 0; pm_labels[i]; i++)
 		if (!strcmp(pm_labels[i], suspend_type)) {
 			test_state_label = pm_labels[i];
 			return 1;
