@@ -65,6 +65,8 @@ endif
 
 	LTO_FINAL_CFLAGS += -flto=jobserver
 
+	LTO_CFLAGS += -fipa-pta
+
 	# Disable some options for LTO
 	LTO_CFLAGS += -fno-fat-lto-objects -Wno-attributes \
 		      -Wno-lto-type-mismatch -Wno-stringop-overflow
