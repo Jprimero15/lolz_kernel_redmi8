@@ -91,7 +91,7 @@ ifdef CONFIG_LTO_CP_CLONE
 	LTO_CFLAGS += -fipa-cp-clone
 endif
 
-	KBUILD_CFLAGS += ${LTO_CFLAGS}
+	KBUILD_CFLAGS += ${LTO_CFLAGS} --param=max-inline-insns-auto=1000
 
 	LDFINAL := ${CONFIG_SHELL} ${srctree}/scripts/gcc-ld \
                   ${LTO_FINAL_CFLAGS}
