@@ -974,7 +974,7 @@ static ssize_t msm_fb_dfps_mode_store(struct device *dev,
 }
 
 bool set_white_point_x = true;
-static ssize_t mdss_fb_set_wpoint(struct device *dev,
+static ssize_t msm_fb_wpoint_store(struct device *dev,
 	struct device_attribute *attr, const char *buf, size_t len)
 {
 	if (set_white_point_x) {
@@ -986,7 +986,7 @@ static ssize_t mdss_fb_set_wpoint(struct device *dev,
 	}
 	return len;
 }
-static ssize_t mdss_fb_get_wpoint(struct device *dev,
+static ssize_t msm_fb_wpoint_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
 	int ret;
@@ -994,13 +994,13 @@ static ssize_t mdss_fb_get_wpoint(struct device *dev,
 		white_point_num_x, white_point_num_y);
 	return ret;
 }
-static ssize_t mdss_fb_set_rpoint(struct device *dev,
+static ssize_t msm_fb_rpoint_store(struct device *dev,
 	struct device_attribute *attr, const char *buf, size_t len)
 {
 	sscanf(buf, "%6d", &white_point_num_r) ;
 	return len;
 }
-static ssize_t mdss_fb_get_rpoint(struct device *dev,
+static ssize_t msm_fb_rpoint_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
 	int ret;
@@ -1008,13 +1008,13 @@ static ssize_t mdss_fb_get_rpoint(struct device *dev,
 		white_point_num_r);
 	return ret;
 }
-static ssize_t mdss_fb_set_gpoint(struct device *dev,
+static ssize_t msm_fb_gpoint_store(struct device *dev,
 	struct device_attribute *attr, const char *buf, size_t len)
 {
 	sscanf(buf, "%6d", &white_point_num_g) ;
 	return len;
 }
-static ssize_t mdss_fb_get_gpoint(struct device *dev,
+static ssize_t msm_fb_gpoint_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
 	int ret;
@@ -1022,13 +1022,13 @@ static ssize_t mdss_fb_get_gpoint(struct device *dev,
 		white_point_num_g);
 	return ret;
 }
-static ssize_t mdss_fb_set_bpoint(struct device *dev,
+static ssize_t msm_fb_bpoint_store(struct device *dev,
 	struct device_attribute *attr, const char *buf, size_t len)
 {
 	sscanf(buf, "%6d", &white_point_num_b) ;
 	return len;
 }
-static ssize_t mdss_fb_get_bpoint(struct device *dev,
+static ssize_t msm_fb_bpoint_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
 	int ret;
@@ -1199,14 +1199,10 @@ static DEVICE_ATTR_RW(msm_fb_persist_mode);
 static DEVICE_ATTR_RO(idle_power_collapse);
 static DEVICE_ATTR_RW(msm_fb_dispparam);
 static DEVICE_ATTR_RW(msm_fb_hbm);
-static DEVICE_ATTR(msm_fb_wpoint, S_IRUGO | S_IWUSR,
-	mdss_fb_get_wpoint, mdss_fb_set_wpoint);
-static DEVICE_ATTR(msm_fb_rpoint, S_IRUGO | S_IWUSR,
-	mdss_fb_get_rpoint, mdss_fb_set_rpoint);
-static DEVICE_ATTR(msm_fb_gpoint, S_IRUGO | S_IWUSR,
-	mdss_fb_get_gpoint, mdss_fb_set_gpoint);
-static DEVICE_ATTR(msm_fb_bpoint, S_IRUGO | S_IWUSR,
-	mdss_fb_get_bpoint, mdss_fb_set_bpoint);
+static DEVICE_ATTR_RW(msm_fb_wpoint);
+static DEVICE_ATTR_RW(msm_fb_rpoint);
+static DEVICE_ATTR_RW(msm_fb_gpoint);
+static DEVICE_ATTR_RW(msm_fb_bpoint);
 
 static struct attribute *mdss_fb_attrs[] = {
 	&dev_attr_msm_fb_type.attr,
