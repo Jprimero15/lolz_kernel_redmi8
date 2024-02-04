@@ -47,6 +47,10 @@
 #define MDP_PP_AD_BL_LINEAR	0x0
 #define MDP_PP_AD_BL_LINEAR_INV	0x1
 
+extern struct mdss_dsi_ctrl_pdata *change_par_ctrl;
+extern int change_par_buf;
+extern int LCM_effect[3];
+
 /**
  * enum mdp_notify_event - Different frame events to indicate frame update state
  *
