@@ -3170,6 +3170,12 @@ static struct device_node *mdss_dsi_pref_prim_panel(
  *
  * returns pointer to panel node on success, NULL on error.
  */
+u32 white_point_num_x;
+u32 white_point_num_y;
+u32 white_point_num_r;
+u32 white_point_num_g;
+u32 white_point_num_b;
+
 static struct device_node *mdss_dsi_find_panel_of_node(
 		struct platform_device *pdev, char *panel_cfg)
 {
@@ -3182,6 +3188,7 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 	struct device_node *dsi_pan_node = NULL, *mdss_node = NULL;
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = platform_get_drvdata(pdev);
 	struct mdss_panel_info *pinfo = &ctrl_pdata->panel_data.panel_info;
+	char *wponit_str;
 
 	len = strlen(panel_cfg);
 	ctrl_pdata->panel_data.dsc_cfg_np_name[0] = '\0';
@@ -3191,6 +3198,15 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 			 __func__, __LINE__);
 		goto end;
 	} else {
+		wponit_str = strnstr(panel_cfg, ":wpoint=", len);
+		if (!wponit_str) {
+			pr_err("%s:[white point calibration] white point is not present in %s\n",
+					__func__, panel_cfg);
+		} else {
+			white_point_num_x = ((*(wponit_str +  8)) - '0') * 100 + ((*(wponit_str +  9) - '0'))*10 + (*(wponit_str +  10) - '0');
+			white_point_num_y = ((*(wponit_str +  11)) - '0') * 100 + ((*(wponit_str +  12) - '0'))*10 + (*(wponit_str +  13) - '0');
+			pr_err("[white point calibration] white_point_num_x = %d,white_point_num_y = %d\n", white_point_num_x, white_point_num_y);
+		}
 		/* check if any override parameters are set */
 		pinfo->sim_panel_mode = 0;
 		override_cfg = strnstr(panel_cfg, "#" OVERRIDE_CFG, len);
@@ -3247,6 +3263,32 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 			}
 		}
 #endif
+
+		if (!strcmp(panel_name, "qcom,mdss_dsi_ili9881c_hdplus_video_c3e")) {
+			white_point_num_r = 625329;
+			white_point_num_g = 307618;
+			white_point_num_b = 169047;
+		} else if (!strcmp(panel_name, "qcom,mdss_dsi_ili9881d_hdplus_video_c3e")) {
+			white_point_num_r = 627328;
+			white_point_num_g = 302614;
+			white_point_num_b = 163052;
+		} else if (!strcmp(panel_name, "qcom,mdss_dsi_jd9365z_hdplus_video_c3e")) {
+			white_point_num_r = 653334;
+			white_point_num_g = 309625;
+			white_point_num_b = 150050;
+		} else if (!strcmp(panel_name, "qcom,mdss_dsi_ili9881h_hdplus_video_c3i")) {
+			white_point_num_r = 640339;
+			white_point_num_g = 319605;
+			white_point_num_b = 147057;
+		} else if (!strcmp(panel_name, "qcom,mdss_dsi_nvt36525b_hdplus_video_c3i")) {
+			white_point_num_r = 639336;
+			white_point_num_g = 316607;
+			white_point_num_b = 157060;
+		} else if (!strcmp(panel_name, "qcom,mdss_dsi_FT8006S_hdplus_video_c3i")) {
+			white_point_num_r = 635332;
+			white_point_num_g = 306611;
+			white_point_num_b = 158059;
+		}
 
 		mdss_node = of_parse_phandle(pdev->dev.of_node,
 			"qcom,mdss-mdp", 0);
