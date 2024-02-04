@@ -780,7 +780,7 @@ static int mdss_fb_blanking_mode_switch(struct msm_fb_data_type *mfd, int mode)
 	return 0;
 }
 
-static ssize_t mdss_fb_change_dispparam(struct device *dev,
+static ssize_t msm_fb_dispparam_store(struct device *dev,
 	struct device_attribute *attr, const char *buf, size_t len)
 {
 
@@ -911,7 +911,7 @@ static ssize_t mdss_fb_change_dispparam(struct device *dev,
 	return len;
 }
 
-static ssize_t mdss_fb_get_dispparam(struct device *dev,
+static ssize_t msm_fb_dispparam_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
 
@@ -1127,9 +1127,8 @@ static DEVICE_ATTR_RW(msm_fb_dfps_mode);
 static DEVICE_ATTR_RO(measured_fps);
 static DEVICE_ATTR_RW(msm_fb_persist_mode);
 static DEVICE_ATTR_RO(idle_power_collapse);
+static DEVICE_ATTR_RW(msm_fb_dispparam);
 static DEVICE_ATTR_RW(msm_fb_hbm);
-static DEVICE_ATTR(msm_fb_dispparam, 0644,
-	mdss_fb_get_dispparam, mdss_fb_change_dispparam);
 
 static struct attribute *mdss_fb_attrs[] = {
 	&dev_attr_msm_fb_type.attr,
@@ -1145,8 +1144,8 @@ static struct attribute *mdss_fb_attrs[] = {
 	&dev_attr_measured_fps.attr,
 	&dev_attr_msm_fb_persist_mode.attr,
 	&dev_attr_idle_power_collapse.attr,
-	&dev_attr_msm_fb_hbm.attr,
 	&dev_attr_msm_fb_dispparam.attr,
+	&dev_attr_msm_fb_hbm.attr,
 	NULL,
 };
 
