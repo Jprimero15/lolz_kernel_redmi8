@@ -14,12 +14,7 @@
 
 /* Copied from stock sdm439-camera-sensor-mtp.dtsi */
 
-#ifdef CONFIG_COMMON_CLK_MSM
 #include <dt-bindings/clock/msm-clocks-8952.h>
-#else
-#include <dt-bindings/clock/qcom,gcc-sdm429w.h>
-#include <dt-bindings/clock/qcom,rpmcc.h>
-#endif
 
 &cci {
 	qcom,camera@0 {
@@ -57,8 +52,8 @@
 				qcom,sensor-mode = <0>;
 				qcom,cci-master = <0>;
 				status = "ok";
-				clocks = <&gcc MCLK0_CLK_SRC>,
-					<&gcc GCC_CAMSS_MCLK0_CLK>;
+				clocks = <&clock_gcc clk_mclk0_clk_src>,
+								<&clock_gcc clk_gcc_camss_mclk0_clk>;
 				clock-names = "cam_src_clk", "cam_clk";
 				qcom,clock-rates = <24000000 0>;
 	};
@@ -93,8 +88,8 @@
 				qcom,sensor-mode = <0>;
 				qcom,cci-master = <1>;
 				status = "ok";
-				clocks = <&gcc MCLK1_CLK_SRC>,
-					<&gcc GCC_CAMSS_MCLK1_CLK>;
+				clocks = <&clock_gcc clk_mclk1_clk_src>,
+								<&clock_gcc clk_gcc_camss_mclk1_clk>;
 				clock-names = "cam_src_clk", "cam_clk";
 				qcom,clock-rates = <24000000 0>;
 		};
@@ -132,8 +127,8 @@
 				qcom,sensor-mode = <0>;
 				qcom,cci-master = <0>;
 				status = "ok";
-				clocks = <&gcc MCLK2_CLK_SRC>,
-					<&gcc GCC_CAMSS_MCLK2_CLK>;
+				clocks = <&clock_gcc clk_mclk2_clk_src>,
+						<&clock_gcc clk_gcc_camss_mclk2_clk>;
 				clock-names = "cam_src_clk", "cam_clk";
 				qcom,clock-rates = <24000000 0>;
 		};
