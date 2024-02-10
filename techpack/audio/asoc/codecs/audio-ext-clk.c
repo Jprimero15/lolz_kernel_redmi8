@@ -13,7 +13,7 @@
 #include <linux/platform_device.h>
 #include <linux/gpio.h>
 #include <linux/of_gpio.h>
-#include <dt-bindings/clock/msm-clocks-8996.h>
+#include <dt-bindings/clock/msm-clocks-8952.h>
 #include <dsp/q6afe-v2.h>
 #include "audio-ext-clk.h"
 
