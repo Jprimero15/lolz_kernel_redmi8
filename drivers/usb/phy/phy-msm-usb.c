@@ -17,7 +17,9 @@
 #include <linux/of_gpio.h>
 #include <linux/of_platform.h>
 #include <linux/uaccess.h>
+#if IS_ENABLED(CONFIG_DEBUG_FS)
 #include <linux/debugfs.h>
+#endif
 #include <linux/seq_file.h>
 #include <linux/pm_runtime.h>
 #include <linux/suspend.h>
@@ -3635,6 +3637,7 @@ const struct file_operations msm_otg_bus_fops = {
 	.release = single_release,
 };
 
+#if IS_ENABLED(CONFIG_DEBUG_FS)
 static struct dentry *msm_otg_dbg_root;
 
 static int msm_otg_debugfs_init(struct msm_otg *motg)
@@ -3690,6 +3693,7 @@ static void msm_otg_debugfs_cleanup(void)
 {
 	debugfs_remove_recursive(msm_otg_dbg_root);
 }
+#endif
 
 static long clk_perf_rate;
 
@@ -4750,9 +4754,11 @@ static int msm_otg_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, motg);
 	device_init_wakeup(&pdev->dev, 1);
 
+#if IS_ENABLED(CONFIG_DEBUG_FS)
 	ret = msm_otg_debugfs_init(motg);
 	if (ret)
 		dev_dbg(&pdev->dev, "mode debugfs file is not available\n");
+#endif
 
 	if (motg->pdata->otg_control == OTG_PMIC_CONTROL &&
 			(!(motg->pdata->mode == USB_OTG) ||
@@ -4862,7 +4868,9 @@ remove_cdev:
 	pm_runtime_disable(&pdev->dev);
 	device_remove_file(&pdev->dev, &dev_attr_dpdm_pulldown_enable);
 	device_remove_file(&pdev->dev, &dev_attr_otg_status);
+#if IS_ENABLED(CONFIG_DEBUG_FS)
 	msm_otg_debugfs_cleanup();
+#endif
 phy_reg_deinit:
 	devm_regulator_unregister(motg->phy.dev, motg->dpdm_rdev);
 remove_phy:
@@ -4931,7 +4939,9 @@ static int msm_otg_remove(struct platform_device *pdev)
 		msm_otg_setup_devices(pdev, motg->pdata->mode, false);
 	if (psy)
 		power_supply_put(psy);
+#if IS_ENABLED(CONFIG_DEBUG_FS)
 	msm_otg_debugfs_cleanup();
+#endif
 	cancel_delayed_work_sync(&motg->chg_work);
 	cancel_delayed_work_sync(&motg->sdp_check);
 	cancel_delayed_work_sync(&motg->id_status_work);
