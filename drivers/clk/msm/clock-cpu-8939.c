@@ -954,53 +954,6 @@ static int __init clock_a53_init(void)
 }
 arch_initcall(clock_a53_init);
 
-static int __init clock_cpu_lpm_get_latency(void)
-{
-	bool single_cluster;
-	int rc = 0;
-	struct device_node *ofnode = of_find_compatible_node(NULL, NULL,
-					"qcom,cpu-clock-8939");
-
-	if (!ofnode)
-		ofnode = of_find_compatible_node(NULL, NULL,
-					"qcom,cpu-clock-8917");
-
-	if (!ofnode)
-		ofnode = of_find_compatible_node(NULL, NULL,
-					"qcom,cpu-clock-sdm439");
-
-	if (!ofnode)
-		ofnode = of_find_compatible_node(NULL, NULL,
-					"qcom,cpu-clock-sdm429");
-	if (!ofnode)
-		return 0;
-
-	single_cluster = of_property_read_bool(ofnode,
-					"qcom,num-cluster");
-
-	rc = lpm_get_latency(&a53_bc_clk.latency_lvl,
-			&a53_bc_clk.cpu_latency_no_l2_pc_us);
-	if (rc < 0)
-		pr_err("Failed to get the L2 PC value for perf\n");
-
-	if (!single_cluster) {
-		rc = lpm_get_latency(&a53_lc_clk.latency_lvl,
-				&a53_lc_clk.cpu_latency_no_l2_pc_us);
-		if (rc < 0)
-			pr_err("Failed to get the L2 PC value for pwr\n");
-
-		pr_debug("Latency for pwr/perf cluster %d : %d\n",
-			a53_lc_clk.cpu_latency_no_l2_pc_us,
-			a53_bc_clk.cpu_latency_no_l2_pc_us);
-	} else {
-		pr_debug("Latency for perf cluster %d\n",
-			a53_bc_clk.cpu_latency_no_l2_pc_us);
-	}
-
-	return rc;
-}
-late_initcall_sync(clock_cpu_lpm_get_latency);
-
 #define APCS_C0_PLL			0xb116000
 #define C0_PLL_MODE			0x0
 #define C0_PLL_L_VAL			0x4
