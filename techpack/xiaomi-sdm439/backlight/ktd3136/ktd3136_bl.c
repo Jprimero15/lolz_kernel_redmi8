@@ -634,7 +634,7 @@ int xiaomi_sdm439_ktd_hbm_set(enum xiaomi_sdm439_backlight_hbm_mode hbm_mode)
 
 int xiaomi_sdm439_ktd3137_brightness_set(int brightness)
 {
-	LOG_DBG("%s brightness = %d\n", __func__, brightness);
+//	LOG_DBG("%s brightness = %d\n", __func__, brightness);
 #if IS_ENABLED(CONFIG_MACH_FAMILY_XIAOMI_OLIVE)
 	if (xiaomi_sdm439_mach_get_family() == XIAOMI_SDM439_MACH_FAMILY_OLIVE &&
 			(brightness > 0) && (brightness <= 8)) {
