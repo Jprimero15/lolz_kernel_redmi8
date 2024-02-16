@@ -21,7 +21,9 @@
 #include <linux/wait.h>
 #include <linux/rpmsg.h>
 #include <linux/rpmsg/qcom_smd.h>
+#ifdef CONFIG_IPC_LOGGING
 #include <linux/ipc_logging.h>
+#endif
 
 #include "rpmsg_internal.h"
 
@@ -94,6 +96,7 @@ static const struct {
 	},
 };
 
+#ifdef CONFIG_IPC_LOGGING
 /* ipc logging wrapper */
 #define smd_ipc(log_ctx, print, dev, x...) do { \
 ipc_log_string(log_ctx, x); \
@@ -104,6 +107,7 @@ if (print) { \
 		pr_err(x); \
 } \
 } while (0)
+#endif
 
 /**
  * struct qcom_smd_edge - representing a remote processor
@@ -434,8 +438,10 @@ static void qcom_smd_channel_reset(struct qcom_smd_channel *channel)
 	SET_RX_CHANNEL_INFO(channel, tail, 0);
 
 	qcom_smd_signal_channel(channel);
+#ifdef CONFIG_IPC_LOGGING
 	smd_ipc(channel->edge->ipc, false, NULL, "%s: ch %s ed %s\n",
 			__func__, channel->name, channel->edge->name);
+#endif
 
 	channel->state = SMD_CHANNEL_CLOSED;
 	channel->pkt_size = 0;
@@ -466,9 +472,11 @@ static size_t qcom_smd_channel_get_rx_avail(struct qcom_smd_channel *channel)
 	head = GET_RX_CHANNEL_INFO(channel, head);
 	tail = GET_RX_CHANNEL_INFO(channel, tail);
 
+#ifdef CONFIG_IPC_LOGGING
 	smd_ipc(channel->edge->ipc, false, NULL,
 		"%s: h: 0x%x t: 0x%x ch %s ed %s\n",
 		__func__, head, tail, channel->name, channel->edge->name);
+#endif
 	return (head - tail) & (channel->fifo_size - 1);
 }
 
@@ -495,8 +503,10 @@ static void qcom_smd_channel_set_state(struct qcom_smd_channel *channel,
 
 	channel->state = state;
 	qcom_smd_signal_channel(channel);
+#ifdef CONFIG_IPC_LOGGING
 	smd_ipc(channel->edge->ipc, false, NULL, "%s: ch %s ed %s\n",
 			__func__, channel->name, channel->edge->name);
+#endif
 }
 
 /*
@@ -589,8 +599,10 @@ static size_t qcom_smd_channel_ext_read(struct qcom_smd_channel *channel)
 		channel->extended_buf = kmalloc(channel->ext_pkt_size,
 								GFP_ATOMIC);
 		if (!channel->extended_buf) {
+#ifdef CONFIG_IPC_LOGGING
 			smd_ipc(channel->edge->ipc, true, NULL,
 				"%s: mem alloc failed\n", __func__);
+#endif
 			return 0;
 		}
 		ptr = channel->extended_buf;
@@ -614,11 +626,13 @@ static size_t qcom_smd_channel_ext_read(struct qcom_smd_channel *channel)
 		ptr = channel->extended_buf;
 		len = channel->ext_pkt_size;
 		ret = ept->cb(ept->rpdev, ptr, len, ept->priv, RPMSG_ADDR_ANY);
+#ifdef CONFIG_IPC_LOGGING
 		if (ret < 0) {
 			smd_ipc(channel->edge->ipc, false, NULL,
 			"%s: ret %d len %d ch %s\n", __func__, ret, len,
 								channel->name);
 		}
+#endif
 		kfree(channel->extended_buf);
 		channel->extended_buf = NULL;
 		channel->ext_buf = NULL;
@@ -665,15 +679,19 @@ static int qcom_smd_channel_recv_single(struct qcom_smd_channel *channel)
 	if (ept->cb) {
 		ret = ept->cb(ept->rpdev, ptr, len, ept->priv, RPMSG_ADDR_ANY);
 		if (ret < 0) {
+#ifdef CONFIG_IPC_LOGGING
 			smd_ipc(channel->edge->ipc, false, NULL,
 				"%s: ret %d len %d ch %s\n", __func__, ret, len,
 								channel->name);
+#endif
 			return ret;
 		}
 	} else {
+#ifdef CONFIG_IPC_LOGGING
 		smd_ipc(channel->edge->ipc, false, NULL,
 			"%s: Callback not available on channel: %s\n", __func__,
 								channel->name);
+#endif
 		return -EAGAIN;
 	}
 
@@ -683,8 +701,10 @@ static int qcom_smd_channel_recv_single(struct qcom_smd_channel *channel)
 	channel->pkt_size = 0;
 
 exit:
+#ifdef CONFIG_IPC_LOGGING
 	smd_ipc(channel->edge->ipc, false, NULL, "%s: len %d ch %s ed %s\n",
 			__func__, len, channel->name, channel->edge->name);
+#endif
 	return 0;
 }
 
@@ -739,16 +759,20 @@ static bool qcom_smd_channel_intr(struct qcom_smd_channel *channel)
 			qcom_smd_channel_peek(channel, &pktlen, sizeof(pktlen));
 			qcom_smd_channel_advance(channel, SMD_PACKET_HEADER_LEN);
 			channel->pkt_size = le32_to_cpu(pktlen);
+#ifdef CONFIG_IPC_LOGGING
 			smd_ipc(channel->edge->ipc, false, NULL,
 			"%s: pkt_size: %d ch %s ed %s\n", __func__,
 			channel->pkt_size, channel->name, channel->edge->name);
+#endif
 		} else if (channel->pkt_size && (avail >= channel->pkt_size ||
 				channel->pkt_size >= channel->fifo_size)) {
 			ret = qcom_smd_channel_recv_single(channel);
 			if (ret) {
+#ifdef CONFIG_IPC_LOGGING
 				smd_ipc(channel->edge->ipc, false, NULL,
 				"%s: fail ret %d ch %s ed %s\n", __func__,
 				ret, channel->name, channel->edge->name);
+#endif
 				break;
 			}
 		} else {
@@ -765,8 +789,10 @@ static bool qcom_smd_channel_intr(struct qcom_smd_channel *channel)
 		wmb();
 
 		qcom_smd_signal_channel(channel);
+#ifdef CONFIG_IPC_LOGGING
 		smd_ipc(channel->edge->ipc, false, NULL, "%s: ch %s ed %s\n",
 			__func__, channel->name, channel->edge->name);
+#endif
 	}
 
 out:
@@ -792,9 +818,11 @@ static irqreturn_t qcom_smd_edge_intr(int irq, void *data)
 	list_for_each_entry(channel, &edge->channels, list) {
 		spin_lock(&channel->recv_lock);
 		kick_state |= qcom_smd_channel_intr(channel);
+#ifdef CONFIG_IPC_LOGGING
 		smd_ipc(channel->edge->ipc, false, NULL,
 		"%s: to APPS ch %s ed %s\n", __func__, channel->name,
 							edge->name);
+#endif
 		spin_unlock(&channel->recv_lock);
 	}
 	spin_unlock(&edge->channels_lock);
@@ -948,9 +976,11 @@ static int __qcom_smd_send(struct qcom_smd_channel *channel, const void *data,
 	wmb();
 
 	qcom_smd_signal_channel(channel);
+#ifdef CONFIG_IPC_LOGGING
 	smd_ipc(channel->edge->ipc, false, NULL,
 	"%s: hdr:%d len:%d ch %s ed %s\n", __func__,
 	sizeof(hdr), len, channel->name, channel->edge->name);
+#endif
 
 out_unlock:
 	spin_unlock_irqrestore(&channel->tx_lock, flags);
@@ -1167,8 +1197,10 @@ static int qcom_smd_set_sigs(struct rpmsg_endpoint *ept, u32 sigs)
 
 	SET_TX_CHANNEL_FLAG(channel, fSTATE, 1);
 	qcom_smd_signal_channel(channel);
+#ifdef CONFIG_IPC_LOGGING
 	smd_ipc(channel->edge->ipc, false, NULL, "%s: ch %s ed %s\n",
 			__func__, channel->name, channel->edge->name);
+#endif
 
 	return 0;
 }
@@ -1267,8 +1299,10 @@ static int qcom_smd_create_device(struct qcom_smd_channel *channel)
 	rpdev->dev.parent = &edge->dev;
 	rpdev->dev.release = qcom_smd_release_device;
 
+#ifdef CONFIG_IPC_LOGGING
 	smd_ipc(channel->edge->ipc, false, NULL,
 		"%s: registering ch %s\n", __func__, channel->name);
+#endif
 	return rpmsg_register_device(rpdev);
 }
 
@@ -1496,8 +1530,10 @@ static void qcom_channel_state_worker(struct work_struct *work)
 		strscpy_pad(chinfo.name, channel->name, sizeof(chinfo.name));
 		chinfo.src = RPMSG_ADDR_ANY;
 		chinfo.dst = RPMSG_ADDR_ANY;
+#ifdef CONFIG_IPC_LOGGING
 		smd_ipc(channel->edge->ipc, false, NULL,
 			"%s: unregistering ch %s\n", __func__, channel->name);
+#endif
 
 		wake_up_interruptible_all(&channel->fblockread_event);
 
@@ -1667,11 +1703,13 @@ struct qcom_smd_edge *qcom_smd_register_edge(struct device *parent,
 	edge->dev.groups = qcom_smd_edge_groups;
 	dev_set_name(&edge->dev, "%s:%s", dev_name(parent), node->name);
 
+#ifdef CONFIG_IPC_LOGGING
 	/* ipc logging handler */
 	edge->ipc = ipc_log_context_create(4, dev_name(&edge->dev), 0);
 	if (!edge->ipc)
 		dev_info(&edge->dev, "%s: failed to create ipc log cntxt\n",
 							__func__);
+#endif
 
 	ret = device_register(&edge->dev);
 	if (ret) {
@@ -1694,8 +1732,10 @@ struct qcom_smd_edge *qcom_smd_register_edge(struct device *parent,
 
 	schedule_work(&edge->scan_work);
 
+#ifdef CONFIG_IPC_LOGGING
 	smd_ipc(edge->ipc, false, NULL,
 		"%s: %s:%s\n", __func__, dev_name(parent), node->name);
+#endif
 	return edge;
 
 unregister_dev:
@@ -1757,7 +1797,9 @@ static int qcom_smd_remove_edge(struct device *dev, void *data)
 {
 	struct qcom_smd_edge *edge = to_smd_edge(dev);
 
+#ifdef CONFIG_IPC_LOGGING
 	ipc_log_context_destroy(edge->ipc);
+#endif
 
 	return qcom_smd_unregister_edge(edge);
 }
