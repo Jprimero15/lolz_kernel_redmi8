@@ -14,7 +14,7 @@
 	interrupt-parent = <&wakegic>;
 
 	chosen {
-		bootargs = "sched_enable_hmp=1 kpti=0";
+		bootargs = "quiet noirqdebug nodebugmon rcupdate.rcu_expedited=1 rcu_nocbs=0-7 kpti=0";
 	};
 
 	firmware: firmware {
