@@ -41,16 +41,15 @@
 / {
         /delete-node/ energy-costs;
         energy_costs: energy-costs {
-                compatible = "sched-energy";
 
                 CPU_COST_0: core-cost0 {
                         busy-cost-data = <
-                                  960000   46
-                                 1305600   72
-                                 1497600  112
-                                 1708800  144
-                                 1958400  221
-                                 2016000  227
+                                  488   46
+                                  663   72
+                                  761  112
+                                  868  144
+                                  995  221
+                                 1024  227
                         >;
                         idle-cost-data = <
                                 100 80 60 40
@@ -59,11 +58,11 @@
 
                 CPU_COST_1: core-cost1 {
                         busy-cost-data = <
-                                  768000   21
-                                  998400   35
-                                 1171200   61
-                                 1305600   79
-                                 1459200  112
+                                  390   21
+                                  507   35
+                                  595   61
+                                  663   79
+                                  741  112
                         >;
 			idle-cost-data = <
 				40 20 10 8
