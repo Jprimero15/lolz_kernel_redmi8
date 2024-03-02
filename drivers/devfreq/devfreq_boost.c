@@ -9,6 +9,7 @@
 #include <linux/fb.h>
 #include <linux/input.h>
 #include <linux/kthread.h>
+#include <linux/moduleparam.h>
 #include <linux/slab.h>
 #include <uapi/linux/sched/types.h>
 #include "governor.h"
@@ -34,6 +35,14 @@ struct df_boost_drv {
 	struct notifier_block fb_notif;
 };
 
+static const int cpu_ddr_bw_boost_freq = CONFIG_DEVFREQ_MSM_CPU_DDR_BW_BOOST_FREQ;
+static unsigned short input_boost_duration = CONFIG_DEVFREQ_INPUT_BOOST_DURATION_MS;
+static unsigned short wake_boost_duration = CONFIG_DEVFREQ_WAKE_BOOST_DURATION_MS;
+
+module_param(cpu_ddr_bw_boost_freq, uint, 0644);
+module_param(input_boost_duration, short, 0644);
+module_param(wake_boost_duration, short, 0644);
+
 static void devfreq_input_unboost(struct work_struct *work);
 static void devfreq_max_unboost(struct work_struct *work);
 
@@ -51,19 +60,17 @@ static void devfreq_max_unboost(struct work_struct *work);
 
 static struct df_boost_drv df_boost_drv_g __read_mostly = {
 	BOOST_DEV_INIT(df_boost_drv_g, DEVFREQ_MSM_CPU_DDR_BW,
-		       CONFIG_DEVFREQ_MSM_CPU_DDR_BW_BOOST_FREQ)
+		       cpu_ddr_bw_boost_freq)
 };
 
 static void __devfreq_boost_kick(struct boost_dev *b)
 {
-	unsigned int period = CONFIG_DEVFREQ_INPUT_BOOST_DURATION_MS;
-
 	if (!READ_ONCE(b->df) || test_bit(SCREEN_OFF, &b->state))
 		return;
 
 	set_bit(INPUT_BOOST, &b->state);
 	if (!mod_delayed_work(system_unbound_wq, &b->input_unboost,
-		msecs_to_jiffies(period))) {
+		msecs_to_jiffies(input_boost_duration))) {
 		/* Set the bit again in case we raced with the unboost worker */
 		set_bit(INPUT_BOOST, &b->state);
 		wake_up(&b->boost_waitq);
@@ -205,7 +212,7 @@ static int fb_notifier_cb(struct notifier_block *nb,
 		if (*blank == FB_BLANK_UNBLANK) {
 			clear_bit(SCREEN_OFF, &b->state);
 			__devfreq_boost_kick_max(b,
-				CONFIG_DEVFREQ_WAKE_BOOST_DURATION_MS);
+				wake_boost_duration);
 		} else {
 			set_bit(SCREEN_OFF, &b->state);
 			wake_up(&b->boost_waitq);
