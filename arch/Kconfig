@@ -525,7 +525,6 @@ config THINLTO
 choice
 	prompt "Link-Time Optimization (LTO) (EXPERIMENTAL)"
 	default LTO_NONE
-	default LTO_GCC if CC_IS_GCC
 	help
 	  This option turns on Link-Time Optimization (LTO).
 
