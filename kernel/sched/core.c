@@ -13,6 +13,7 @@
 #include <linux/irq.h>
 #include <linux/delay.h>
 #include <linux/scs.h>
+#include <linux/binfmts.h>
 
 #include <asm/switch_to.h>
 #include <asm/tlb.h>
@@ -8447,6 +8448,11 @@ static ssize_t cpu_uclamp_write(struct kernfs_open_file *of, char *buf,
 {
 	struct uclamp_request req;
 	struct task_group *tg;
+
+#ifdef CONFIG_UCLAMP_ASSIST
+	if (task_is_booster(current))
+		return nbytes;
+#endif
 
 	req = capacity_from_percent(buf);
 	if (req.ret)
