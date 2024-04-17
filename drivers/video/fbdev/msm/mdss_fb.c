@@ -39,6 +39,7 @@
 #include <linux/kthread.h>
 #include <linux/sched.h>
 #include <linux/devfreq_boost.h>
+#include <linux/cpu_input_boost.h>
 #include <uapi/linux/sched/types.h>
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_SDM439)
 #include <xiaomi-sdm439/mach.h>
@@ -5591,6 +5592,7 @@ int mdss_fb_do_ioctl(struct fb_info *info, unsigned int cmd,
 		ret = mdss_fb_mode_switch(mfd, dsi_mode);
 		break;
 	case MSMFB_ATOMIC_COMMIT:
+		cpu_input_boost_kick();
 		devfreq_boost_kick(DEVFREQ_MSM_CPU_DDR_BW);
 		ret = mdss_fb_atomic_commit_ioctl(info, argp, file);
 		break;
