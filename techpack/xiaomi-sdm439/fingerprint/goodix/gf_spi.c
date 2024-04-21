@@ -608,9 +608,7 @@ static int gf_release(struct inode *inode, struct file *filp)
 	if (!gf_dev->users) {
 
 		pr_info("disble_irq. irq = %d\n", gf_dev->irq);
-		gf_disable_irq(gf_dev);
-		/*add by gaoge for HQ-42572*/
-		devm_free_irq(&gf_dev->spi->dev, gf_dev->irq, gf_dev);
+		irq_cleanup(gf_dev);
 		gf_cleanup(gf_dev);
 		/*power off the sensor*/
 		gf_dev->device_available = 0;
