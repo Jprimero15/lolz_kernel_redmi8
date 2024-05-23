@@ -8521,7 +8521,7 @@ static void uclamp_set(struct cgroup_subsys_state *css)
 	int i;
 
 	static struct uclamp_param tgts[] = {
-		{"top-app",             "10", "max",  1},
+		{"top-app",             "0",  "max",  1},
 		{"rt",			"10", "max",  1},
 		{"nnapi-hal",		"0",  "max",  1},
        		{"foreground",          "0",  "max",  1},
