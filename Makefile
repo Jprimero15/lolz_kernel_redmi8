@@ -776,6 +776,10 @@ endif
 # Use make W=1 to enable them (see scripts/Makefile.extrawarn)
 KBUILD_CFLAGS += $(call cc-disable-warning, unused-but-set-variable)
 
+ifdef CONFIG_LD_IS_LLD
+KBUILD_LDFLAGS  += -mllvm -enable-ml-inliner=release
+endif
+
 KBUILD_CFLAGS += $(call cc-disable-warning, unused-const-variable)
 
 # These result in bogus false positives
