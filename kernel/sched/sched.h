@@ -91,6 +91,8 @@ struct cpuidle_state;
 
 #define CPU_NR		8
 
+unsigned long apply_dvfs_headroom(unsigned long util, int cpu, bool tapered);
+
 extern __read_mostly bool sched_predl;
 extern unsigned int sched_capacity_margin_up[CPU_NR];
 extern unsigned int sched_capacity_margin_down[CPU_NR];
