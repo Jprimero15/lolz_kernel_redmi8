@@ -3,7 +3,6 @@
 #include "camera-mtp-delete.dtsi"
 #include "camera-mtp.dtsi"
 #include "display.dtsi"
-#include "energy_model.dtsi"
 #include "misc.dtsi"
 #include "pinctrl.dtsi"
 #include "pm8953.dtsi"
