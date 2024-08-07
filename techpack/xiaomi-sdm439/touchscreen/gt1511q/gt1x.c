@@ -21,7 +21,6 @@
 #include <linux/input/mt.h>
 #endif
 
-#include <xiaomi-sdm439/mach.h>
 #include <xiaomi-sdm439/touchscreen.h>
 
 static struct input_dev *input_dev;
@@ -1175,9 +1174,6 @@ static struct i2c_driver gt1x_ts_driver = {
 
 static int __init gt1x_ts_init(void)
 {
-	if (!xiaomi_sdm439_mach_get())
-		return -ENODEV;
-
 	GTP_INFO("GTP driver installing...");
 	return i2c_add_driver(&gt1x_ts_driver);
 }
