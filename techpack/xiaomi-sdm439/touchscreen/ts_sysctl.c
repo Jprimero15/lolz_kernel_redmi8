@@ -1,7 +1,6 @@
 #include <linux/device.h>
 #include <linux/module.h>
 #include <linux/sysctl.h>
-#include <xiaomi-sdm439/mach.h>
 #include <xiaomi-sdm439/touchscreen.h>
 
 #define ADD_OLD_DT2W_SYSCTL
@@ -113,9 +112,6 @@ static struct ctl_table_header *xiaomi_sdm439_touchscreen_sysctl_header;
 
 static int __init xiaomi_sdm439_touchscreen_sysctl_init(void)
 {
-	if (!xiaomi_sdm439_mach_get())
-		return -ENODEV;
-
 	xiaomi_sdm439_touchscreen_sysctl_header = register_sysctl_table(xiaomi_sdm439_touchscreen_root_dir);
 	if (!xiaomi_sdm439_touchscreen_sysctl_header)
 		return -ENOMEM;

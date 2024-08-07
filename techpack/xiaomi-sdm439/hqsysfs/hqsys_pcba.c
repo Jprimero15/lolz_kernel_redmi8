@@ -80,9 +80,6 @@ static struct platform_driver huaqin_pcba_vadc_driver = {
 };
 static int __init huaqin_pcba_module_init(void)
 {
-	if (!xiaomi_sdm439_mach_get())
-		return -ENODEV;
-
 	platform_driver_register(&huaqin_pcba_vadc_driver);
 
 	return 0;
@@ -91,9 +88,6 @@ static int __init huaqin_pcba_module_init(void)
 
 static int __init huaqin_pcba_early_init(void)
 {
-	if (!xiaomi_sdm439_mach_get())
-		return -ENODEV;
-
 	read_pcba_config_form_smem();
 	return 0;
 }

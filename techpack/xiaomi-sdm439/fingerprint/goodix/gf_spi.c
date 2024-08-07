@@ -42,7 +42,6 @@
 #include <linux/pm_qos.h>
 #include <linux/cpufreq.h>
 #include <linux/kernel.h>
-#include <xiaomi-sdm439/mach.h>
 
 #include "gf_spi.h"
 
@@ -849,9 +848,6 @@ static struct platform_driver gf_driver = {
 static int __init gf_init(void)
 {
 	int status;
-
-	if (!xiaomi_sdm439_mach_get())
-		return -ENODEV;
 
     printk("zhong-in gf_init\n");
 	/* Claim our 256 reserved device numbers.  Then register a class

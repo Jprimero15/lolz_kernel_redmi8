@@ -41,7 +41,6 @@
 #include <linux/jiffies.h>
 #endif /* #if NVT_TOUCH_ESD_PROTECT */
 
-#include <xiaomi-sdm439/mach.h>
 #include <xiaomi-sdm439/touchscreen.h>
 
 #if NVT_TOUCH_ESD_PROTECT
@@ -2380,9 +2379,6 @@ return:
 static int32_t __init nvt_driver_init(void)
 {
 	int32_t ret = 0;
-
-	if (!xiaomi_sdm439_mach_get())
-		return -ENODEV;
 
 	NVT_LOG("start\n");
 
