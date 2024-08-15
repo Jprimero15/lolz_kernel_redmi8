@@ -104,10 +104,6 @@ struct gf_ioc_chip_info {
 #define USE_PLATFORM_BUS		1
 /*#define  USE_SPI_BUS  1*/
 /*#define GF_FASYNC   1*//*If support fasync mechanism.*/
-#define CONFIG_FINGERPRINT_FP_VREG_CONTROL
-#ifndef CONFIG_FINGERPRINT_FP_VREG_CONTROL
-#define GF_PW_CTL 1
-#endif
 #define GF_NETLINK_ENABLE 1
 #define GF_NET_EVENT_IRQ 1
 #define GF_NET_EVENT_FB_BLACK 2
