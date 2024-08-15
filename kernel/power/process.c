@@ -194,28 +194,15 @@ void thaw_fingerprintd(void)
 	struct task_struct *p;
 	const char Name[] = "android.hardware.biometrics.fingerprint";
 	const size_t szName = sizeof(Name) - 1;
-	bool fp_hidl_thawed, gx_fpd_thawed = false;
 
 	pm_freezing = false;
 	pm_nosig_freezing = false;
 
 	read_lock(&tasklist_lock);
 	for_each_process(p) {
-		if (fp_hidl_thawed && gx_fpd_thawed)
+	  if (!strncmp(p->comm, Name, MIN(strlen(p->comm), szName))) {
+			__thaw_task(p);
 			break;
-		if (!fp_hidl_thawed) {
-			if (!strncmp(p->comm, Name, MIN(strlen(p->comm), szName))) {
-				__thaw_task(p);
-				fp_hidl_thawed = true;
-				continue;
-			}
-		}
-		if (!gx_fpd_thawed) {
-			if (!memcmp(p->comm, "gx_fpd", 7)) {
-				__thaw_task(p);
-				gx_fpd_thawed = true;
-				continue;
-			}
 		}
 	}
 	read_unlock(&tasklist_lock);
