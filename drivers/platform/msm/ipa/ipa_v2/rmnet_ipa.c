@@ -971,8 +971,10 @@ static int __ipa_wwan_open(struct net_device *dev)
 		reinit_completion(&wwan_ptr->resource_granted_completion);
 	wwan_ptr->device_status = WWAN_DEVICE_ACTIVE;
 
-	if (ipa_rmnet_res.ipa_napi_enable)
+	if (ipa_rmnet_res.ipa_napi_enable) {
+		dev_set_threaded(dev, true);
 		napi_enable(&(wwan_ptr->napi));
+	}
 	return 0;
 }
 
@@ -1008,8 +1010,10 @@ static int __ipa_wwan_close(struct net_device *dev)
 		 * remote side to hang if tried to open again
 		 */
 		reinit_completion(&wwan_ptr->resource_granted_completion);
-		if (ipa_rmnet_res.ipa_napi_enable)
+		if (ipa_rmnet_res.ipa_napi_enable) {
+			dev_set_threaded(dev, false);
 			napi_disable(&(wwan_ptr->napi));
+		}
 		rc = ipa2_deregister_intf(dev->name);
 		if (rc) {
 			IPAWANERR("[%s]: ipa2_deregister_intf failed %d\n",
