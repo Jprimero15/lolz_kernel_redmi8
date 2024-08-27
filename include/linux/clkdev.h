@@ -22,7 +22,6 @@ struct clk_lookup {
 	struct list_head	node;
 	const char		*dev_id;
 	const char		*con_id;
-	int			of_idx;
 	struct clk		*clk;
 	struct clk_hw		*clk_hw;
 };
