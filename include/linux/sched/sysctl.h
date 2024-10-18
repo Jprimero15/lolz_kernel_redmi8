@@ -91,10 +91,6 @@ static unsigned int sysctl_sched_busy_hyst;
 static unsigned int sysctl_sched_group_upmigrate_pct;
 static unsigned int sysctl_sched_group_downmigrate_pct;
 static unsigned int sysctl_sched_ravg_window_nr_ticks;
-static unsigned int sysctl_sched_capacity_margin_up;
-static unsigned int sysctl_sched_capacity_margin_down;
-static unsigned int sysctl_sched_min_task_util_for_colocation;
-static unsigned int sysctl_sched_min_task_util_for_boost;
 #endif /* CONFIG_PELT_COMPATIBILITY_LAYER */
 
 enum sched_tunable_scaling {
@@ -110,14 +106,14 @@ extern unsigned int sysctl_numa_balancing_scan_period_min;
 extern unsigned int sysctl_numa_balancing_scan_period_max;
 extern unsigned int sysctl_numa_balancing_scan_size;
 
-extern __read_mostly unsigned int sysctl_sched_migration_cost;
 #ifdef CONFIG_SCHED_DEBUG
+extern __read_mostly unsigned int sysctl_sched_migration_cost;
 extern __read_mostly unsigned int sysctl_sched_nr_migrate;
-#endif
 
 int sched_proc_update_handler(struct ctl_table *table, int write,
 		void __user *buffer, size_t *length,
 		loff_t *ppos);
+#endif
 
 extern int sched_boost_handler(struct ctl_table *table, int write,
 			void __user *buffer, size_t *lenp, loff_t *ppos);
