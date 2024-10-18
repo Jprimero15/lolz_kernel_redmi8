@@ -30,10 +30,6 @@
 
 #include <trace/events/sched.h>
 
-int pelt_load_avg_period = PELT16_LOAD_AVG_PERIOD;
-int pelt_load_avg_max = PELT16_LOAD_AVG_MAX;
-const u32 *pelt_runnable_avg_yN_inv = pelt16_runnable_avg_yN_inv;
-
 /*
  * Approximate:
  *   val * y^n,    where y^32 ~= 0.5 (~1 scheduling period)
@@ -60,7 +56,7 @@ static u64 decay_load(u64 val, u64 n)
 		local_n %= LOAD_AVG_PERIOD;
 	}
 
-	val = mul_u64_u32_shr(val, pelt_runnable_avg_yN_inv[local_n], 32);
+	val = mul_u64_u32_shr(val, runnable_avg_yN_inv[local_n], 32);
 	return val;
 }
 
@@ -116,8 +112,6 @@ accumulate_sum(u64 delta, struct sched_avg *sa,
 {
 	u32 contrib = (u32)delta; /* p == 0 -> delta < 1024 */
 	u64 periods;
-	u64 divider;
-	bool eas_enable = sched_energy_enabled();
 
 	delta += sa->period_contrib;
 	periods = delta / 1024; /* A period is 1024us (~1ms) */
@@ -126,38 +120,26 @@ accumulate_sum(u64 delta, struct sched_avg *sa,
 	 * Step 1: decay old *_sum if we crossed period boundaries.
 	 */
 	if (periods) {
-		if (running && eas_enable)
-			delta %= 1024;
-		else {
-			sa->load_sum = decay_load(sa->load_sum, periods);
-			sa->runnable_load_sum =
-				decay_load(sa->runnable_load_sum, periods);
-			sa->util_sum = decay_load((u64)(sa->util_sum), periods);
+		sa->load_sum = decay_load(sa->load_sum, periods);
+		sa->runnable_load_sum =
+			decay_load(sa->runnable_load_sum, periods);
+		sa->util_sum = decay_load((u64)(sa->util_sum), periods);
 
-			/*
-			 * Step 2
-			 */
-			delta %= 1024;
-			contrib = __accumulate_pelt_segments(periods,
-					1024 - sa->period_contrib, delta);
-		}
+		/*
+		 * Step 2
+		 */
+		delta %= 1024;
+		contrib = __accumulate_pelt_segments(periods,
+				1024 - sa->period_contrib, delta);
 	}
 	sa->period_contrib = delta;
-	divider = LOAD_AVG_MAX - 1024 + sa->period_contrib;
 
-	if (load) {
+	if (load)
 		sa->load_sum += load * contrib;
-		sa->load_sum = min_t(u64, sa->load_sum, divider * load);
-	}
-	if (runnable) {
+	if (runnable)
 		sa->runnable_load_sum += runnable * contrib;
-		sa->runnable_load_sum = min_t(u64, sa->runnable_load_sum,
-						divider * runnable);
-	}
-	if (running) {
+	if (running)
 		sa->util_sum += contrib << SCHED_CAPACITY_SHIFT;
-		sa->util_sum = min_t(u64, sa->util_sum, divider << SCHED_CAPACITY_SHIFT);
-	}
 
 	return periods;
 }
@@ -223,9 +205,7 @@ ___update_load_sum(u64 now, struct sched_avg *sa,
 	 * This means that weight will be 0 but not running for a sched_entity
 	 * but also for a cfs_rq if the latter becomes idle. As an example,
 	 * this happens during idle_balance() which calls
-	 * update_blocked_averages().
-	 *
-	 * Also see the comment in accumulate_sum().
+	 * update_blocked_averages()
 	 */
 	if (!load)
 		runnable = running = 0;
@@ -243,30 +223,6 @@ ___update_load_sum(u64 now, struct sched_avg *sa,
 	return 1;
 }
 
-/*
- * When syncing *_avg with *_sum, we must take into account the current
- * position in the PELT segment otherwise the remaining part of the segment
- * will be considered as idle time whereas it's not yet elapsed and this will
- * generate unwanted oscillation in the range [1002..1024[.
- *
- * The max value of *_sum varies with the position in the time segment and is
- * equals to :
- *
- *   LOAD_AVG_MAX*y + sa->period_contrib
- *
- * which can be simplified into:
- *
- *   LOAD_AVG_MAX - 1024 + sa->period_contrib
- *
- * because LOAD_AVG_MAX*y == LOAD_AVG_MAX-1024
- *
- * The same care must be taken when a sched entity is added, updated or
- * removed from a cfs_rq and we need to update sched_avg. Scheduler entities
- * and the cfs rq, to which they are attached, have the same position in the
- * time segment because they use the same clock. This means that we can use
- * the period_contrib of cfs_rq when updating the sched_avg of a sched_entity
- * if it's more convenient.
- */
 static __always_inline void
 ___update_load_avg(struct sched_avg *sa, unsigned long load, unsigned long runnable)
 {
