@@ -12,6 +12,7 @@
 #include <linux/kcov.h>
 #include <linux/delay.h>
 #include <linux/scs.h>
+#include <linux/binfmts.h>
 
 #include <asm/switch_to.h>
 #include <asm/tlb.h>
@@ -8045,6 +8046,11 @@ static ssize_t cpu_uclamp_write(struct kernfs_open_file *of, char *buf,
 	struct uclamp_request req;
 	struct task_group *tg;
 
+#ifdef CONFIG_UCLAMP_ASSIST
+	if (task_is_booster(current))
+		return nbytes;
+#endif
+
 	req = capacity_from_percent(buf);
 	if (req.ret)
 		return req.ret;
@@ -8156,11 +8162,16 @@ static void uclamp_set(struct cgroup_subsys_state *css)
 	int i;
 
 	static struct uclamp_param tgts[] = {
-		{"top-app",             "0", "max",  1},
-       		{"foreground",          "0",  "80",  0},
-                {"dex2oat",             "0",  "30",  0},
-        	{"background",          "0",  "30",  0},
-        	{"system-background",   "0",  "50",  0},
+		{"top-app",             "0",  "max",  1},
+		{"rt",			"10", "max",  1},
+		{"nnapi-hal",		"0",  "max",  1},
+       		{"foreground",          "0",  "max",  1},
+                {"camera-daemon",       "20", "max",  1},
+                {"system",              "0",  "max",  0},
+                {"dex2oat",             "0",  "60",   0},
+        	{"background",          "0",  "50",   0},
+        	{"system-background",   "0",  "50",   0},
+
 	};
 
         if(!css->cgroup->kn)
