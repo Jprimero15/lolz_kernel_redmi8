@@ -497,7 +497,7 @@ static int simple_lmk_init_set(const char *val, const struct kernel_param *kp)
 
 	si_meminfo(&i);
 	if (i.totalram << (PAGE_SHIFT-10) > 2048ull * 1024) {
-	  slmk_minfree = 32;
+	  slmk_minfree = 24;
 	} else {
 	  slmk_minfree = 24;
 	}
