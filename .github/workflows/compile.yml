@@ -53,12 +53,16 @@ jobs:
           
           mkdir -p out
           
-          DEFCONFIG=$(find arch/arm64/configs -name "*pine*" -o -name "*lolz*" -o -name "*mi439*" | head -n 1)
-          if [ -z "$DEFCONFIG" ]; then
-            DEFCONFIG="arch/arm64/configs/mi439-stock_defconfig"
+          # Buscar de forma exacta cualquier defconfig de pine o mi439 en todo el árbol
+          CONFIG_PATH=$(find arch/arm64/configs -name "*pine*" -o -name "*mi439*" -o -name "*lolz*" | head -n 1)
+          if [ -z "$CONFIG_PATH" ]; then
+            # Si no encuentra por nombre, busca el primer defconfig disponible
+            CONFIG_PATH=$(find arch/arm64/configs -name "*defconfig*" | head -n 1)
           fi
-          CONFIG_NAME=$(basename "$DEFCONFIG")
-          echo "Usando configuración: $CONFIG_NAME"
+          
+          CONFIG_NAME=$(basename "$CONFIG_PATH")
+          echo "Defconfig localizado en: $CONFIG_PATH"
+          echo "Usando nombre de configuración: $CONFIG_NAME"
           
           make O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
           
