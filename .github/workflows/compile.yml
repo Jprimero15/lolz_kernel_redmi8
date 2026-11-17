@@ -40,10 +40,13 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $HOME/proton-clang
 
-      - name: Forzar e Integrar KernelSU Limpio
+      - name: Integrar Correctamente KernelSU
         run: |
           rm -rf drivers/kernelsu
-          git clone --depth=1 https://github.com/tiann/KernelSU.git drivers/kernelsu
+          git clone --depth=1 https://github.com/tiann/KernelSU.git drivers/kernelsu_temp
+          # Mover la estructura interna al directorio exacto que busca el Kconfig
+          mv drivers/kernelsu_temp/kernel drivers/kernelsu
+          rm -rf drivers/kernelsu_temp
 
       - name: Compilar Kernel 4.19
         run: |
