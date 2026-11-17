@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-kernel:
-    name: Compilación Limpia Kernel 4.19 (pine)
+    name: Compilación Limpia Kernel 4.19 con Parches
     runs-on: ubuntu-22.04
 
     steps:
@@ -34,35 +34,54 @@ jobs:
             python3 \
             cpio
 
+      - name: Descargar Toolchain Proton Clang
+        run: |
+          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $HOME/proton-clang
+
       - name: Integrar KernelSU v0.7.1 Oficialmente
         run: |
           rm -rf drivers/kernelsu
           curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/v0.7.1/kernel/setup.sh" | bash -s v0.7.1
 
+      - name: Aplicar Parches de Compatibilidad 4.19
+        run: |
+          # 1. Parchear blk_opf_t en F2FS para evitar conflictos de tipos en kernel 4.19
+          find fs/f2fs -type f -name "*.c" -o -name "*.h" | xargs sed -i 's/blk_opf_t/unsigned int/g' || true
+          
+          # 2. Declarar struct cs_target en cpuset.c si falta para el gancho de KernelSU
+          if [ -f "kernel/cgroup/cpuset.c" ]; then
+            sed -i '/#include <linux\/cgroup.h>/a struct cs_target;' kernel/cgroup/cpuset.c || true
+          fi
+
       - name: Compilar Kernel 4.19 con GCC
         run: |
+          export PATH="$HOME/proton-clang/bin:$PATH"
           mkdir -p out
           
-          # Detectar el defconfig del dispositivo (excluyendo gki)
           CONFIG_PATH=$(find arch/arm64/configs -name "*pine*" -o -name "*mi439*" -o -name "*sdm439*" | grep -v "gki" | head -n 1)
           if [ -z "$CONFIG_PATH" ]; then
             CONFIG_PATH=$(find arch/arm64/configs -name "*defconfig" | grep -v "gki" | head -n 1)
           fi
           
           CONFIG_NAME=$(basename "$CONFIG_PATH")
-          echo "Defconfig detectado: $CONFIG_NAME en la ruta $CONFIG_PATH"
+          echo "Defconfig detectado: $CONFIG_NAME"
           
-          # Copiar a la raíz de configs si está en una subcarpeta (ej. vendor/)
           if [ "$CONFIG_PATH" != "arch/arm64/configs/$CONFIG_NAME" ]; then
             cp "$CONFIG_PATH" arch/arm64/configs/
           fi
           
-          # Configuración inicial usando herramientas GCC puras
-          make O=out ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
+          make O=out ARCH=arm64 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
           
-          # Compilación paralela con GCC ignorando advertencias no críticas
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
+            CC=clang \
+            LD=ld.lld \
+            AR=llvm-ar \
+            NM=llvm-nm \
+            OBJCOPY=llvm-objcopy \
+            OBJDUMP=llvm-objdump \
+            STRIP=llvm-strip \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
             KCFLAGS="-w"
