@@ -53,17 +53,18 @@ jobs:
           
           mkdir -p out
           
-          echo "=== LISTANDO DEFCONFIGS DISPONIBLES ==="
-          find arch/arm64/configs -name "*defconfig"
+          echo "=== LISTANDO TODOS LOS CONFIGS DISPONIBLES ==="
+          ls -la arch/arm64/configs/
           
-          # Detectar cualquier defconfig disponible de forma automática sin nombres quemados
-          CONFIG_PATH=$(find arch/arm64/configs -name "*pine*" -o -name "*mi439*" -o -name "*sdm439*" -o -name "*lolz*" | head -n 1)
+          # Seleccionar el primer defconfig que encuentre sin nombres quemados falsos
+          CONFIG_PATH=$(find arch/arm64/configs -name "*pine*" -o -name "*mi439*" -o -name "*sdm439*" -o -name "*defconfig*" | head -n 1)
           if [ -z "$CONFIG_PATH" ]; then
-            CONFIG_PATH=$(find arch/arm64/configs -name "*defconfig" | head -n 1)
+            echo "ERROR: No se encontró ningún archivo de configuración."
+            exit 1
           fi
           
           CONFIG_NAME=$(basename "$CONFIG_PATH")
-          echo "Usando defconfig encontrado: $CONFIG_NAME (Ruta: $CONFIG_PATH)"
+          echo "Usando defconfig exacto: $CONFIG_NAME"
           
           make O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
           
