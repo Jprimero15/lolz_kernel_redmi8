@@ -40,20 +40,21 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $HOME/proton-clang
 
-      - name: Integrar Correctamente KernelSU
-        run: |
-          rm -rf drivers/kernelsu
-          git clone --depth=1 https://github.com/tiann/KernelSU.git drivers/kernelsu_temp
-          # Mover la estructura interna al directorio exacto que busca el Kconfig
-          mv drivers/kernelsu_temp/kernel drivers/kernelsu
-          rm -rf drivers/kernelsu_temp
-
       - name: Compilar Kernel 4.19
         run: |
           export PATH="$HOME/proton-clang/bin:$PATH"
           
           mkdir -p out
-          make O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- pine_defconfig
+          
+          # Buscar automáticamente el defconfig correcto para pine o el kernel actual
+          DEFCONFIG=$(find arch/arm64/configs -name "*pine*" -o -name "*lolz*" -o -name "*mi439*" | head -n 1)
+          if [ -z "$DEFCONFIG" ]; then
+            DEFCONFIG="arch/arm64/configs/pine_defconfig"
+          fi
+          CONFIG_NAME=$(basename "$DEFCONFIG")
+          echo "Usando configuración: $CONFIG_NAME"
+          
+          make O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
           
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
