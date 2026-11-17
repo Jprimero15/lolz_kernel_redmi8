@@ -47,7 +47,7 @@ jobs:
           mv drivers/kernelsu_temp/kernel drivers/kernelsu
           rm -rf drivers/kernelsu_temp
 
-      - name: Compilar Kernel 4.19
+      - name: Compilar Kernel 4.19 (Modo Verbose)
         run: |
           export PATH="$HOME/proton-clang/bin:$PATH"
           
@@ -59,8 +59,8 @@ jobs:
           
           make O=out ARCH=arm64 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
           
-          # Compilar con -j2 para ordenar la salida y capturar el error exacto si ocurre
-          make -j2 O=out \
+          # Compilar con V=1 y -j1 para imprimir el error exacto sin ocultarlo
+          make V=1 -j1 O=out \
             ARCH=arm64 \
             CC=clang \
             LD=ld.lld \
