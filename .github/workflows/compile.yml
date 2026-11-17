@@ -57,11 +57,10 @@ jobs:
           CONFIG_NAME=$(basename "$CONFIG_PATH")
           echo "Usando defconfig: $CONFIG_NAME"
           
-          # Configurar con soporte completo de LLVM para Clang
           make O=out ARCH=arm64 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
           
-          # Compilar con todas las herramientas LLVM y KCFLAGS para ignorar warnings
-          make -j$(nproc --all) O=out \
+          # Compilar con -j2 para ordenar la salida y capturar el error exacto si ocurre
+          make -j2 O=out \
             ARCH=arm64 \
             CC=clang \
             LD=ld.lld \
