@@ -40,21 +40,28 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $HOME/proton-clang
 
-      - name: Compilar Kernel 4.19 Nativo
+      - name: Integrar KernelSU Compatible con 4.19
+        run: |
+          rm -rf drivers/kernelsu
+          git clone --depth=1 -b main https://github.com/tiann/KernelSU.git drivers/kernelsu
+          # KernelSU trae su estructura en una subcarpeta 'kernel', la movemos a la raíz de drivers/kernelsu
+          if [ -d "drivers/kernelsu/kernel" ]; then
+            cp -r drivers/kernelsu/kernel/* drivers/kernelsu/
+            rm -rf drivers/kernelsu/kernel
+          fi
+
+      - name: Compilar Kernel 4.19
         run: |
           export PATH="$HOME/proton-clang/bin:$PATH"
           
           mkdir -p out
           
-          # Detectar el defconfig automáticamente del repositorio
-          CONFIG_PATH=$(find arch/arm64/configs -name "*pine*" -o -name "*mi439*" -o -name "*sdm439*" -o -name "*defconfig*" | head -n 1)
-          CONFIG_NAME=$(basename "$CONFIG_PATH")
+          # Forzar directamente el defconfig correcto para SDM439/pine con KernelSU
+          CONFIG_NAME="gki_defconfig"
           echo "Usando defconfig: $CONFIG_NAME"
           
-          # Configuración inicial con herramientas LLVM
           make O=out ARCH=arm64 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
           
-          # Compilación completa con su propio KernelSU intacto
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CC=clang \
