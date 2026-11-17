@@ -40,11 +40,14 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $HOME/proton-clang
 
-      - name: Integrar KernelSU Compatible con 4.19
+      - name: Integrar KernelSU Versión Estable 4.19
         run: |
           rm -rf drivers/kernelsu
-          git clone --depth=1 -b main https://github.com/tiann/KernelSU.git drivers/kernelsu
-          # KernelSU trae su estructura en una subcarpeta 'kernel', la movemos a la raíz de drivers/kernelsu
+          # Clonar usando un commit estable anterior a los cambios de cpuset en GKI
+          git clone https://github.com/tiann/KernelSU.git drivers/kernelsu
+          cd drivers/kernelsu
+          git checkout v0.9.5 || git checkout main
+          cd ../..
           if [ -d "drivers/kernelsu/kernel" ]; then
             cp -r drivers/kernelsu/kernel/* drivers/kernelsu/
             rm -rf drivers/kernelsu/kernel
@@ -56,7 +59,6 @@ jobs:
           
           mkdir -p out
           
-          # Forzar directamente el defconfig correcto para SDM439/pine con KernelSU
           CONFIG_NAME="gki_defconfig"
           echo "Usando defconfig: $CONFIG_NAME"
           
