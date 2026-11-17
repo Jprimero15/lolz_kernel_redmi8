@@ -40,16 +40,22 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $HOME/proton-clang
 
+      - name: Inyectar Estructura de KernelSU
+        run: |
+          rm -rf drivers/kernelsu
+          git clone --depth=1 https://github.com/tiann/KernelSU.git drivers/kernelsu_temp
+          mv drivers/kernelsu_temp/kernel drivers/kernelsu
+          rm -rf drivers/kernelsu_temp
+
       - name: Compilar Kernel 4.19
         run: |
           export PATH="$HOME/proton-clang/bin:$PATH"
           
           mkdir -p out
           
-          # Buscar automáticamente el defconfig correcto para pine o el kernel actual
           DEFCONFIG=$(find arch/arm64/configs -name "*pine*" -o -name "*lolz*" -o -name "*mi439*" | head -n 1)
           if [ -z "$DEFCONFIG" ]; then
-            DEFCONFIG="arch/arm64/configs/pine_defconfig"
+            DEFCONFIG="arch/arm64/configs/mi439-stock_defconfig"
           fi
           CONFIG_NAME=$(basename "$DEFCONFIG")
           echo "Usando configuración: $CONFIG_NAME"
