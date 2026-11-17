@@ -13,7 +13,7 @@ jobs:
       - name: Descargar Código Fuente
         uses: actions/checkout@v4
 
-      - name: Instalar Dependencias
+      - name: Instalar Dependencias y GCC
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -32,26 +32,18 @@ jobs:
             unzip \
             curl \
             python3 \
-            cpio \
-            lld \
-            clang
-
-      - name: Descargar Toolchain Proton Clang
-        run: |
-          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $HOME/proton-clang
+            cpio
 
       - name: Integrar KernelSU v0.7.1 Oficialmente
         run: |
           rm -rf drivers/kernelsu
           curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/v0.7.1/kernel/setup.sh" | bash -s v0.7.1
 
-      - name: Compilar Kernel 4.19
+      - name: Compilar Kernel 4.19 con GCC
         run: |
-          export PATH="$HOME/proton-clang/bin:$PATH"
-          
           mkdir -p out
           
-          # Encontrar el defconfig correcto y copiarlo a la ruta principal si está en una subcarpeta
+          # Detectar el defconfig del dispositivo (excluyendo gki)
           CONFIG_PATH=$(find arch/arm64/configs -name "*pine*" -o -name "*mi439*" -o -name "*sdm439*" | grep -v "gki" | head -n 1)
           if [ -z "$CONFIG_PATH" ]; then
             CONFIG_PATH=$(find arch/arm64/configs -name "*defconfig" | grep -v "gki" | head -n 1)
@@ -60,23 +52,17 @@ jobs:
           CONFIG_NAME=$(basename "$CONFIG_PATH")
           echo "Defconfig detectado: $CONFIG_NAME en la ruta $CONFIG_PATH"
           
-          # Si el archivo está en una subcarpeta (ej. vendor/), lo copiamos a arch/arm64/configs/ para que make lo reconozca directo
+          # Copiar a la raíz de configs si está en una subcarpeta (ej. vendor/)
           if [ "$CONFIG_PATH" != "arch/arm64/configs/$CONFIG_NAME" ]; then
             cp "$CONFIG_PATH" arch/arm64/configs/
           fi
           
-          make O=out ARCH=arm64 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
+          # Configuración inicial usando herramientas GCC puras
+          make O=out ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
           
+          # Compilación paralela con GCC ignorando advertencias no críticas
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
-            CC=clang \
-            LD=ld.lld \
-            AR=llvm-ar \
-            NM=llvm-nm \
-            OBJCOPY=llvm-objcopy \
-            OBJDUMP=llvm-objdump \
-            STRIP=llvm-strip \
-            CLANG_TRIPLE=aarch64-linux-gnu- \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
             KCFLAGS="-w"
