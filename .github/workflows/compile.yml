@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Descargar Código Fuente
         uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
 
       - name: Instalar Dependencias
         run: |
