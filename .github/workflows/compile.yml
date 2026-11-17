@@ -42,6 +42,11 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $HOME/proton-clang
 
+      - name: Forzar e Integrar KernelSU Limpio
+        run: |
+          rm -rf drivers/kernelsu
+          git clone https://github.com/tiann/KernelSU.git drivers/kernelsu
+
       - name: Compilar Kernel 4.19
         run: |
           export PATH="$HOME/proton-clang/bin:$PATH"
