@@ -40,11 +40,14 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $HOME/proton-clang
 
-      - name: Integrar KernelSU v0.8.5 (Compatible con Kernel 4.19)
+      - name: Integrar KernelSU v0.7.1 (Versión Estable para Kernel 4.19)
         run: |
           rm -rf drivers/kernelsu
-          # Usar el script oficial de KernelSU especificando la versión estable para 4.19
-          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s v0.8.5
+          git clone --depth=1 -b v0.7.1 https://github.com/tiann/KernelSU.git drivers/kernelsu
+          if [ -d "drivers/kernelsu/kernel" ]; then
+            cp -r drivers/kernelsu/kernel/* drivers/kernelsu/
+            rm -rf drivers/kernelsu/kernel
+          fi
 
       - name: Compilar Kernel 4.19
         run: |
