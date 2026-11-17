@@ -1,0 +1,81 @@
+name: Compilar Lolz Kernel 4.19
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-kernel:
+    name: Compilación Limpia Kernel 4.19 (pine)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Descargar Código Fuente
+        uses: actions/checkout@v4
+
+      - name: Instalar Dependencias
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            gcc-aarch64-linux-gnu \
+            gcc-arm-linux-gnueabi \
+            bc \
+            bison \
+            flex \
+            libssl-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libelf-dev \
+            git \
+            zip \
+            unzip \
+            curl \
+            python3 \
+            cpio \
+            lld \
+            clang
+
+      - name: Descargar Toolchain Proton Clang
+        run: |
+          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $HOME/proton-clang
+
+      - name: Compilar Kernel 4.19
+        run: |
+          export PATH="$HOME/proton-clang/bin:$PATH"
+          
+          mkdir -p out
+          make O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- pine_defconfig
+          
+          make -j$(nproc --all) O=out \
+            ARCH=arm64 \
+            CC=clang \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+
+      - name: Empaquetar con AnyKernel3
+        run: |
+          git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git AnyKernel3
+          IMAGE=$(find out/arch/arm64/boot/ -name "Image.gz-dtb" -o -name "Image.gz" | head -n 1)
+          if [ -z "$IMAGE" ]; then
+            echo "ERROR: No se encontró la imagen del kernel compilado en out/"
+            exit 1
+          fi
+          cp "$IMAGE" AnyKernel3/
+          DTBO=$(find out/arch/arm64/boot/ -name "dtbo.img" | head -n 1)
+          if [ -n "$DTBO" ] && [ -f "$DTBO" ]; then
+            cp "$DTBO" AnyKernel3/
+          fi
+          cd AnyKernel3
+          sed -i 's/do.devicecheck=1/do.devicecheck=0/' anykernel.sh
+          sed -i 's/device.name1=.*/device.name1=pine/' anykernel.sh
+          sed -i 's/device.name2=.*/device.name2=redmi7a/' anykernel.sh
+          sed -i 's/block=.*/block=auto;/' anykernel.sh
+          zip -r9 ../LolzKernel-4.19-Pine.zip * -x .git README.md *placeholder
+
+      - name: Subir ZIP Resultante
+        uses: actions/upload-artifact@v4
+        with:
+          name: LolzKernel-4.19-Pine
+          path: LolzKernel-4.19-Pine.zip
