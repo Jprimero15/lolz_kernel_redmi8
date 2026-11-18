@@ -45,8 +45,10 @@ jobs:
             sed -i '/f2fs/I d' fs/Kconfig || true
           fi
 
-          # 2. Inyectar correcciones mediante Python para resolver tipos incompletos y variables no declaradas
+          # 2. Inyectar correcciones mediante Python incluyendo import os
           python3 -c '
+          import os
+
           # Parchear cpuset.c para struct cs_target
           cpuset_path = "kernel/cgroup/cpuset.c"
           if os.path.exists(cpuset_path):
@@ -62,15 +64,12 @@ jobs:
           if os.path.exists(mmu_path):
               with open(mmu_path, "r") as f:
                   code = f.read()
-              # Definir la estructura/variable si no existe para evitar el error de undeclared
               stub = "static struct { void *pmd_entry; } reclaim_walk_ops = {0};\n"
               if "reclaim_walk_ops" in code and "static struct" not in code:
-                  code = code.replace("reclaim_walk_ops.pmd_entry", "reclaim_walk_ops.pmd_entry")
-                  # Insertar el stub al inicio de la función reclaim_write o antes de su uso
                   code = code.replace("int reclaim_write(", "int reclaim_write(\n" + stub)
               with open(mmu_path, "w") as f:
                   f.write(code)
-          ' python3
+          '
 
       - name: Compilar Kernel con GCC
         run: |
