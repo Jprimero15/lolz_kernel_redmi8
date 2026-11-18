@@ -1,4 +1,4 @@
-name: Compilar Kernel 4.19 Definitivo (pine)
+name: Compilar Kernel 4.19 Stock (pine)
 
 on:
   push:
@@ -34,29 +34,43 @@ jobs:
             python3 \
             cpio
 
-      - name: Limpiar KernelSU y Purgar F2FS Incompatible
+      - name: Parchear Ganchos Huérfanos de KernelSU
         run: |
-          # 1. Purgar rastros de KernelSU
-          rm -rf drivers/kernelsu
-          find drivers/ -name "*kernelsu*" -exec rm -rf {} + || true
+          # 1. Purgar carpetas externas de KernelSU y F2FS incompatible
+          rm -rf drivers/kernelsu fs/f2fs
           if [ -f "drivers/Kconfig" ]; then
             sed -i '/kernelsu/d' drivers/Kconfig || true
           fi
-
-          # 2. Eliminar por completo la carpeta f2fs incompatible
-          rm -rf fs/f2fs
-
-          # 3. Remover referencias a F2FS en Kconfig y Makefile para evitar errores de búsqueda
           if [ -f "fs/Kconfig" ]; then
             sed -i '/f2fs/I d' fs/Kconfig || true
           fi
-          if [ -f "fs/Makefile" ]; then
-            sed -i '/f2fs/I d' fs/Makefile || true
-          fi
 
-          # 4. Desactivar F2FS en los archivos de configuración (defconfig)
-          find arch/arm64/configs -type f \( -name "*pine*" -o -name "*mi439*" -o -name "*sdm439*" -o -name "*defconfig*" \) -exec sed -i 's/CONFIG_F2FS_FS=y/CONFIG_F2FS_FS=n/g' {} + || true
-          find arch/arm64/configs -type f \( -name "*pine*" -o -name "*mi439*" -o -name "*sdm439*" -o -name "*defconfig*" \) -exec sed -i '/CONFIG_F2FS_FS/c\CONFIG_F2FS_FS=n' {} + || true
+          # 2. Inyectar correcciones mediante Python para resolver tipos incompletos y variables no declaradas
+          python3 -c '
+          # Parchear cpuset.c para struct cs_target
+          cpuset_path = "kernel/cgroup/cpuset.c"
+          if os.path.exists(cpuset_path):
+              with open(cpuset_path, "r") as f:
+                  code = f.read()
+              if "struct cs_target;" not in code:
+                  code = "struct cs_target;\n" + code
+              with open(cpuset_path, "w") as f:
+                  f.write(code)
+
+          # Parchear task_mmu.c para reclaim_walk_ops
+          mmu_path = "fs/proc/task_mmu.c"
+          if os.path.exists(mmu_path):
+              with open(mmu_path, "r") as f:
+                  code = f.read()
+              # Definir la estructura/variable si no existe para evitar el error de undeclared
+              stub = "static struct { void *pmd_entry; } reclaim_walk_ops = {0};\n"
+              if "reclaim_walk_ops" in code and "static struct" not in code:
+                  code = code.replace("reclaim_walk_ops.pmd_entry", "reclaim_walk_ops.pmd_entry")
+                  # Insertar el stub al inicio de la función reclaim_write o antes de su uso
+                  code = code.replace("int reclaim_write(", "int reclaim_write(\n" + stub)
+              with open(mmu_path, "w") as f:
+                  f.write(code)
+          ' python3
 
       - name: Compilar Kernel con GCC
         run: |
@@ -100,10 +114,10 @@ jobs:
           sed -i 's/device.name1=.*/device.name1=pine/' anykernel.sh
           sed -i 's/device.name2=.*/device.name2=redmi7a/' anykernel.sh
           sed -i 's/block=.*/block=auto;/' anykernel.sh
-          zip -r9 ../LolzKernel-Pine.zip * -x .git README.md *placeholder
+          zip -r9 ../LolzKernel-Stock-Pine.zip * -x .git README.md *placeholder
 
       - name: Subir ZIP Resultante
         uses: actions/upload-artifact@v4
         with:
-          name: LolzKernel-Pine
-          path: LolzKernel-Pine.zip
+          name: LolzKernel-Stock-Pine
+          path: LolzKernel-Stock-Pine.zip
