@@ -1,4 +1,4 @@
-name: Compilar Lolz Kernel 4.19 (pine)
+name: Compilar Kernel Stock (pine)
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-kernel:
-    name: Compilación Kernel 4.19 (pine)
+    name: Compilación Stock Kernel 4.19 (pine)
     runs-on: ubuntu-22.04
 
     steps:
@@ -34,30 +34,11 @@ jobs:
             python3 \
             cpio
 
-      - name: Integrar KernelSU v0.7.1 Oficialmente
-        run: |
-          rm -rf drivers/kernelsu
-          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/v0.7.1/kernel/setup.sh" | bash -s v0.7.1
-
-      - name: Parchear Estructuras y Desactivar F2FS Incompatible
-        run: |
-          # 1. Desactivar F2FS en el Makefile de fs/ para evitar los errores de bio_alloc e iostat
-          if [ -f "fs/Makefile" ]; then
-            sed -i '/obj-\$(CONFIG_F2FS_FS)/d' fs/Makefile || true
-          fi
-          if [ -d "fs/f2fs" ]; then
-            rm -rf fs/f2fs
-          fi
-
-          # 2. Solucionar struct cs_target incompleto en kernel/cgroup/cpuset.c
-          if [ -f "kernel/cgroup/cpuset.c" ]; then
-            sed -i '/#include <linux\/cgroup.h>/a struct cs_target;' kernel/cgroup/cpuset.c || true
-          fi
-
-      - name: Compilar Kernel 4.19 con GCC
+      - name: Compilar Kernel Stock con GCC
         run: |
           mkdir -p out
           
+          # Detectar el defconfig correcto para pine / mi439
           CONFIG_PATH=$(find arch/arm64/configs -name "*pine*" -o -name "*mi439*" -o -name "*sdm439*" | head -n 1)
           if [ -z "$CONFIG_PATH" ]; then
             CONFIG_PATH=$(find arch/arm64/configs -name "*defconfig" | head -n 1)
@@ -70,8 +51,10 @@ jobs:
             cp "$CONFIG_PATH" arch/arm64/configs/
           fi
           
+          # Configurar con GCC para arm64
           make O=out ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
           
+          # Compilar limpiamente en paralelo
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CROSS_COMPILE=aarch64-linux-gnu- \
@@ -96,10 +79,10 @@ jobs:
           sed -i 's/device.name1=.*/device.name1=pine/' anykernel.sh
           sed -i 's/device.name2=.*/device.name2=redmi7a/' anykernel.sh
           sed -i 's/block=.*/block=auto;/' anykernel.sh
-          zip -r9 ../LolzKernel-4.19-Pine.zip * -x .git README.md *placeholder
+          zip -r9 ../LolzKernel-Stock-Pine.zip * -x .git README.md *placeholder
 
       - name: Subir ZIP Resultante
         uses: actions/upload-artifact@v4
         with:
-          name: LolzKernel-4.19-Pine
-          path: LolzKernel-4.19-Pine.zip
+          name: LolzKernel-Stock-Pine
+          path: LolzKernel-Stock-Pine.zip
