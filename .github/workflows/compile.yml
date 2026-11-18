@@ -1,4 +1,4 @@
-name: Compilar Lolz Kernel 4.19
+name: Compilar Lolz Kernel 4.19 (pine)
 
 on:
   push:
@@ -6,14 +6,14 @@ on:
 
 jobs:
   build-kernel:
-    name: Compilación Limpia Kernel 4.19 con Parches
+    name: Compilación Kernel 4.19 (pine)
     runs-on: ubuntu-22.04
 
     steps:
       - name: Descargar Código Fuente
         uses: actions/checkout@v4
 
-      - name: Instalar Dependencias y GCC
+      - name: Instalar Dependencias
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -34,54 +34,43 @@ jobs:
             python3 \
             cpio
 
-      - name: Descargar Toolchain Proton Clang
-        run: |
-          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $HOME/proton-clang
-
       - name: Integrar KernelSU v0.7.1 Oficialmente
         run: |
           rm -rf drivers/kernelsu
           curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/v0.7.1/kernel/setup.sh" | bash -s v0.7.1
 
-      - name: Aplicar Parches de Compatibilidad 4.19
+      - name: Aplicar Parches de Tipos para Kernel 4.19
         run: |
-          # 1. Parchear blk_opf_t en F2FS para evitar conflictos de tipos en kernel 4.19
-          find fs/f2fs -type f -name "*.c" -o -name "*.h" | xargs sed -i 's/blk_opf_t/unsigned int/g' || true
+          # Solucionar el conflicto de blk_opf_t en F2FS para fuentes 4.19 de mi439
+          if [ -d "fs/f2fs" ]; then
+            find fs/f2fs -type f -name "*.c" -o -name "*.h" | xargs sed -i 's/\bblk_opf_t\b/unsigned int/g' || true
+          fi
           
-          # 2. Declarar struct cs_target en cpuset.c si falta para el gancho de KernelSU
+          # Asegurar compatibilidad de estructura en cgroup para KernelSU
           if [ -f "kernel/cgroup/cpuset.c" ]; then
             sed -i '/#include <linux\/cgroup.h>/a struct cs_target;' kernel/cgroup/cpuset.c || true
           fi
 
       - name: Compilar Kernel 4.19 con GCC
         run: |
-          export PATH="$HOME/proton-clang/bin:$PATH"
           mkdir -p out
           
-          CONFIG_PATH=$(find arch/arm64/configs -name "*pine*" -o -name "*mi439*" -o -name "*sdm439*" | grep -v "gki" | head -n 1)
+          CONFIG_PATH=$(find arch/arm64/configs -name "*pine*" -o -name "*mi439*" -o -name "*sdm439*" | head -n 1)
           if [ -z "$CONFIG_PATH" ]; then
-            CONFIG_PATH=$(find arch/arm64/configs -name "*defconfig" | grep -v "gki" | head -n 1)
+            CONFIG_PATH=$(find arch/arm64/configs -name "*defconfig" | head -n 1)
           fi
           
           CONFIG_NAME=$(basename "$CONFIG_PATH")
-          echo "Defconfig detectado: $CONFIG_NAME"
+          echo "Defconfig detectado: $CONFIG_NAME en $CONFIG_PATH"
           
           if [ "$CONFIG_PATH" != "arch/arm64/configs/$CONFIG_NAME" ]; then
             cp "$CONFIG_PATH" arch/arm64/configs/
           fi
           
-          make O=out ARCH=arm64 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
+          make O=out ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
           
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
-            CC=clang \
-            LD=ld.lld \
-            AR=llvm-ar \
-            NM=llvm-nm \
-            OBJCOPY=llvm-objcopy \
-            OBJDUMP=llvm-objdump \
-            STRIP=llvm-strip \
-            CLANG_TRIPLE=aarch64-linux-gnu- \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
             KCFLAGS="-w"
@@ -91,7 +80,7 @@ jobs:
           git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git AnyKernel3
           IMAGE=$(find out/arch/arm64/boot/ -name "Image.gz-dtb" -o -name "Image.gz" | head -n 1)
           if [ -z "$IMAGE" ]; then
-            echo "ERROR: No se encontró la imagen del kernel compilado en out/"
+            echo "ERROR: No se encontró la imagen del kernel en out/"
             exit 1
           fi
           cp "$IMAGE" AnyKernel3/
