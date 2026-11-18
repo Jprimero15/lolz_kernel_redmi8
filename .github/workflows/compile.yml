@@ -1,4 +1,4 @@
-name: Compilar Kernel 4.19 con KernelSU (pine)
+name: Compilar Kernel Stock sin KernelSU (pine)
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-kernel:
-    name: Compilación Kernel 4.19 (pine)
+    name: Compilación Kernel Stock (pine)
     runs-on: ubuntu-22.04
 
     steps:
@@ -34,10 +34,16 @@ jobs:
             python3 \
             cpio
 
-      - name: Integrar KernelSU v0.7.1 Oficialmente
+      - name: Eliminar KernelSU y Limpiar Ganchos
         run: |
+          # Eliminar por completo cualquier rastro de KernelSU de la fuente
           rm -rf drivers/kernelsu
-          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/v0.7.1/kernel/setup.sh" | bash -s v0.7.1
+          find drivers/ -name "*kernelsu*" -exec rm -rf {} + || true
+          
+          # Limpiar llamadas o referencias en los Kconfig si existen
+          if [ -f "drivers/Kconfig" ]; then
+            sed -i '/kernelsu/d' drivers/Kconfig || true
+          fi
 
       - name: Compilar Kernel con GCC
         run: |
@@ -81,10 +87,10 @@ jobs:
           sed -i 's/device.name1=.*/device.name1=pine/' anykernel.sh
           sed -i 's/device.name2=.*/device.name2=redmi7a/' anykernel.sh
           sed -i 's/block=.*/block=auto;/' anykernel.sh
-          zip -r9 ../LolzKernel-4.19-Pine.zip * -x .git README.md *placeholder
+          zip -r9 ../LolzKernel-Stock-Pine.zip * -x .git README.md *placeholder
 
       - name: Subir ZIP Resultante
         uses: actions/upload-artifact@v4
         with:
-          name: LolzKernel-4.19-Pine
-          path: LolzKernel-4.19-Pine.zip
+          name: LolzKernel-Stock-Pine
+          path: LolzKernel-Stock-Pine.zip
