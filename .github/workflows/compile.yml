@@ -39,14 +39,17 @@ jobs:
           rm -rf drivers/kernelsu
           curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/v0.7.1/kernel/setup.sh" | bash -s v0.7.1
 
-      - name: Aplicar Parches de Tipos para Kernel 4.19
+      - name: Parchear Estructuras y Desactivar F2FS Incompatible
         run: |
-          # Solucionar el conflicto de blk_opf_t en F2FS para fuentes 4.19 de mi439
+          # 1. Desactivar F2FS en el Makefile de fs/ para evitar los errores de bio_alloc e iostat
+          if [ -f "fs/Makefile" ]; then
+            sed -i '/obj-\$(CONFIG_F2FS_FS)/d' fs/Makefile || true
+          f
           if [ -d "fs/f2fs" ]; then
-            find fs/f2fs -type f -name "*.c" -o -name "*.h" | xargs sed -i 's/\bblk_opf_t\b/unsigned int/g' || true
+            rm -rf fs/f2fs
           fi
-          
-          # Asegurar compatibilidad de estructura en cgroup para KernelSU
+
+          # 2. Solucionar struct cs_target incompleto en kernel/cgroup/cpuset.c
           if [ -f "kernel/cgroup/cpuset.c" ]; then
             sed -i '/#include <linux\/cgroup.h>/a struct cs_target;' kernel/cgroup/cpuset.c || true
           fi
