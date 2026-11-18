@@ -44,7 +44,7 @@ jobs:
           # 1. Desactivar F2FS en el Makefile de fs/ para evitar los errores de bio_alloc e iostat
           if [ -f "fs/Makefile" ]; then
             sed -i '/obj-\$(CONFIG_F2FS_FS)/d' fs/Makefile || true
-          f
+          fi
           if [ -d "fs/f2fs" ]; then
             rm -rf fs/f2fs
           fi
