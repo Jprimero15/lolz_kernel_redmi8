@@ -1,0 +1,122 @@
+name: Compilar Kernel 4.19 Stock (pine)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-kernel:
+    name: Compilación Kernel 4.19 (pine)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Descargar Código Fuente
+        uses: actions/checkout@v4
+
+      - name: Instalar Dependencias
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            gcc-aarch64-linux-gnu \
+            gcc-arm-linux-gnueabi \
+            bc \
+            bison \
+            flex \
+            libssl-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libelf-dev \
+            git \
+            zip \
+            unzip \
+            curl \
+            python3 \
+            cpio
+
+      - name: Parchear Ganchos Huérfanos de KernelSU
+        run: |
+          # 1. Purgar carpetas externas de KernelSU y F2FS incompatible
+          rm -rf drivers/kernelsu fs/f2fs
+          if [ -f "drivers/Kconfig" ]; then
+            sed -i '/kernelsu/d' drivers/Kconfig || true
+          fi
+          if [ -f "fs/Kconfig" ]; then
+            sed -i '/f2fs/I d' fs/Kconfig || true
+          fi
+
+          # 2. Inyectar correcciones mediante Python incluyendo import os
+          python3 -c '
+          import os
+
+          # Parchear cpuset.c para struct cs_target
+          cpuset_path = "kernel/cgroup/cpuset.c"
+          if os.path.exists(cpuset_path):
+              with open(cpuset_path, "r") as f:
+                  code = f.read()
+              if "struct cs_target;" not in code:
+                  code = "struct cs_target;\n" + code
+              with open(cpuset_path, "w") as f:
+                  f.write(code)
+
+          # Parchear task_mmu.c para reclaim_walk_ops
+          mmu_path = "fs/proc/task_mmu.c"
+          if os.path.exists(mmu_path):
+              with open(mmu_path, "r") as f:
+                  code = f.read()
+              stub = "static struct { void *pmd_entry; } reclaim_walk_ops = {0};\n"
+              if "reclaim_walk_ops" in code and "static struct" not in code:
+                  code = code.replace("int reclaim_write(", "int reclaim_write(\n" + stub)
+              with open(mmu_path, "w") as f:
+                  f.write(code)
+          '
+
+      - name: Compilar Kernel con GCC
+        run: |
+          mkdir -p out
+          
+          CONFIG_PATH=$(find arch/arm64/configs -name "*pine*" -o -name "*mi439*" -o -name "*sdm439*" | head -n 1)
+          if [ -z "$CONFIG_PATH" ]; then
+            CONFIG_PATH=$(find arch/arm64/configs -name "*defconfig" | head -n 1)
+          fi
+          
+          CONFIG_NAME=$(basename "$CONFIG_PATH")
+          echo "Defconfig detectado: $CONFIG_NAME en $CONFIG_PATH"
+          
+          if [ "$CONFIG_PATH" != "arch/arm64/configs/$CONFIG_NAME" ]; then
+            cp "$CONFIG_PATH" arch/arm64/configs/
+          fi
+          
+          make O=out ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
+          
+          make -j$(nproc --all) O=out \
+            ARCH=arm64 \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+            KCFLAGS="-w"
+
+      - name: Empaquetar con AnyKernel3
+        run: |
+          git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git AnyKernel3
+          IMAGE=$(find out/arch/arm64/boot/ -name "Image.gz-dtb" -o -name "Image.gz" | head -n 1)
+          if [ -z "$IMAGE" ]; then
+            echo "ERROR: No se encontró la imagen del kernel en out/"
+            exit 1
+          fi
+          cp "$IMAGE" AnyKernel3/
+          DTBO=$(find out/arch/arm64/boot/ -name "dtbo.img" | head -n 1)
+          if [ -n "$DTBO" ] && [ -f "$DTBO" ]; then
+            cp "$DTBO" AnyKernel3/
+          fi
+          cd AnyKernel3
+          sed -i 's/do.devicecheck=1/do.devicecheck=0/' anykernel.sh
+          sed -i 's/device.name1=.*/device.name1=pine/' anykernel.sh
+          sed -i 's/device.name2=.*/device.name2=redmi7a/' anykernel.sh
+          sed -i 's/block=.*/block=auto;/' anykernel.sh
+          zip -r9 ../LolzKernel-Stock-Pine.zip * -x .git README.md *placeholder
+
+      - name: Subir ZIP Resultante
+        uses: actions/upload-artifact@v4
+        with:
+          name: LolzKernel-Stock-Pine
+          path: LolzKernel-Stock-Pine.zip
