@@ -33,12 +33,12 @@ jobs:
             lld \
             llvm
 
-      - name: Descargar Toolchains de Clang y GCC de AOSP
+      - name: Descargar Toolchains desde GitHub
         run: |
           mkdir -p toolchain
-          # Clonar Clang 12 (estable para kernels 4.19)
-          git clone --depth=1 https://gitlab.com/ThankYouMario/android_toolchains.git -b clang-12 toolchain/clang
-          # Clonar cross-compilers de AOSP necesarios para arm64 y arm32
+          # Clonar Clang desde un repositorio espejo oficial en GitHub
+          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_clang_host_linux-x86_clang-r383902.git toolchain/clang
+          # Clonar cross-compilers de AOSP para arquitectura arm64 y arm32
           git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git toolchain/aarch64
           git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9.git toolchain/arm32
 
