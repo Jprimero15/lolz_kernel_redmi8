@@ -1,4 +1,4 @@
-name: Compilar Kernel 4.19 con Parche F2FS (pine)
+name: Compilar Kernel 4.19 Definitivo (pine)
 
 on:
   push:
@@ -34,7 +34,7 @@ jobs:
             python3 \
             cpio
 
-      - name: Limpiar y Parchear Incompatibilidades
+      - name: Limpiar KernelSU y Purgar F2FS Incompatible
         run: |
           # 1. Purgar rastros de KernelSU
           rm -rf drivers/kernelsu
@@ -43,15 +43,20 @@ jobs:
             sed -i '/kernelsu/d' drivers/Kconfig || true
           fi
 
-          # 2. Parchear estructura struct cs_target en cpuset.c
-          if [ -f "kernel/cgroup/cpuset.c" ]; then
-            sed -i '/#include <linux\/cgroup.h>/a struct cs_target;' kernel/cgroup/cpuset.c || true
+          # 2. Eliminar por completo la carpeta f2fs incompatible
+          rm -rf fs/f2fs
+
+          # 3. Remover referencias a F2FS en Kconfig y Makefile para evitar errores de búsqueda
+          if [ -f "fs/Kconfig" ]; then
+            sed -i '/f2fs/I d' fs/Kconfig || true
+          fi
+          if [ -f "fs/Makefile" ]; then
+            sed -i '/f2fs/I d' fs/Makefile || true
           fi
 
-          # 3. Definir blk_opf_t globalmente en un header de fs/f2fs para evitar el error de tipos
-          if [ -f "fs/f2fs/f2fs.h" ]; then
-            sed -i '/#endif/i typedef unsigned int blk_opf_t;' fs/f2fs/f2fs.h || true
-          fi
+          # 4. Desactivar F2FS en los archivos de configuración (defconfig)
+          find arch/arm64/configs -type f \( -name "*pine*" -o -name "*mi439*" -o -name "*sdm439*" -o -name "*defconfig*" \) -exec sed -i 's/CONFIG_F2FS_FS=y/CONFIG_F2FS_FS=n/g' {} + || true
+          find arch/arm64/configs -type f \( -name "*pine*" -o -name "*mi439*" -o -name "*sdm439*" -o -name "*defconfig*" \) -exec sed -i '/CONFIG_F2FS_FS/c\CONFIG_F2FS_FS=n' {} + || true
 
       - name: Compilar Kernel con GCC
         run: |
