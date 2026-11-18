@@ -1,4 +1,4 @@
-name: Compilar Kernel Stock sin Errores (pine)
+name: Compilar Kernel 4.19 con Parches Corregidos (pine)
 
 on:
   push:
@@ -34,23 +34,24 @@ jobs:
             python3 \
             cpio
 
-      - name: Limpiar y Parchear Incompatibilidades del Kernel 4.19
+      - name: Limpiar KernelSU y Parchear Incompatibilidades 4.19
         run: |
-          # 1. Purgar cualquier rastro interno de KernelSU en el repositorio
+          # 1. Purgar rastros de KernelSU
           rm -rf drivers/kernelsu
           find drivers/ -name "*kernelsu*" -exec rm -rf {} + || true
           if [ -f "drivers/Kconfig" ]; then
             sed -i '/kernelsu/d' drivers/Kconfig || true
           fi
 
-          # 2. Reemplazar blk_opf_t por unsigned int en F2FS para evitar errores de tipos
-          if [ -d "fs/f2fs" ]; then
-            find fs/f2fs -type f -name "*.c" -o -name "*.h" | xargs sed -i 's/\bblk_opf_t\b/unsigned int/g' || true
-          fi
-
-          # 3. Declarar struct cs_target en cpuset.c para limpiar los ganchos huérfanos
+          # 2. Parchear estructura struct cs_target en cpuset.c
           if [ -f "kernel/cgroup/cpuset.c" ]; then
             sed -i '/#include <linux\/cgroup.h>/a struct cs_target;' kernel/cgroup/cpuset.c || true
+          fi
+
+          # 3. Solucionar incompatibilidad de argumentos en fs/f2fs/segment.c adaptándolo al kernel 4.19
+          if [ -f "fs/f2fs/segment.c" ]; then
+            sed -i 's/struct bio \*bio = bio_alloc(bdev, 0, REQ_OP_ZONE_RESET | flag, GFP_NOFS);/struct bio *bio = bio_alloc(GFP_NOFS, 0);/' fs/f2fs/segment.c || true
+            sed -i 's/f2fs_update_iostat(sbi, NULL, FS_ZONE_RESET_IO, dc->di.len \* F2FS_BLKSIZE);/\/\/ f2fs_update_iostat disabled/' fs/f2fs/segment.c || true
           fi
 
       - name: Compilar Kernel con GCC
