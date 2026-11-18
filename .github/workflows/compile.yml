@@ -1,4 +1,4 @@
-name: Compilar Kernel Stock sin KernelSU (pine)
+name: Compilar Kernel Stock sin Errores (pine)
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-kernel:
-    name: Compilación Kernel Stock (pine)
+    name: Compilación Kernel 4.19 (pine)
     runs-on: ubuntu-22.04
 
     steps:
@@ -34,15 +34,23 @@ jobs:
             python3 \
             cpio
 
-      - name: Eliminar KernelSU y Limpiar Ganchos
+      - name: Limpiar y Parchear Incompatibilidades del Kernel 4.19
         run: |
-          # Eliminar por completo cualquier rastro de KernelSU de la fuente
+          # 1. Purgar cualquier rastro interno de KernelSU en el repositorio
           rm -rf drivers/kernelsu
           find drivers/ -name "*kernelsu*" -exec rm -rf {} + || true
-          
-          # Limpiar llamadas o referencias en los Kconfig si existen
           if [ -f "drivers/Kconfig" ]; then
             sed -i '/kernelsu/d' drivers/Kconfig || true
+          fi
+
+          # 2. Reemplazar blk_opf_t por unsigned int en F2FS para evitar errores de tipos
+          if [ -d "fs/f2fs" ]; then
+            find fs/f2fs -type f -name "*.c" -o -name "*.h" | xargs sed -i 's/\bblk_opf_t\b/unsigned int/g' || true
+          fi
+
+          # 3. Declarar struct cs_target en cpuset.c para limpiar los ganchos huérfanos
+          if [ -f "kernel/cgroup/cpuset.c" ]; then
+            sed -i '/#include <linux\/cgroup.h>/a struct cs_target;' kernel/cgroup/cpuset.c || true
           fi
 
       - name: Compilar Kernel con GCC
@@ -87,10 +95,10 @@ jobs:
           sed -i 's/device.name1=.*/device.name1=pine/' anykernel.sh
           sed -i 's/device.name2=.*/device.name2=redmi7a/' anykernel.sh
           sed -i 's/block=.*/block=auto;/' anykernel.sh
-          zip -r9 ../LolzKernel-Stock-Pine.zip * -x .git README.md *placeholder
+          zip -r9 ../LolzKernel-Clean-Pine.zip * -x .git README.md *placeholder
 
       - name: Subir ZIP Resultante
         uses: actions/upload-artifact@v4
         with:
-          name: LolzKernel-Stock-Pine
-          path: LolzKernel-Stock-Pine.zip
+          name: LolzKernel-Clean-Pine
+          path: LolzKernel-Clean-Pine.zip
