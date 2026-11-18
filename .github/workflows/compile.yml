@@ -1,4 +1,4 @@
-name: Compilar Kernel 4.19 Stock (pine)
+name: Compilar LolzKernel Clang (pine)
 
 on:
   push:
@@ -6,72 +6,49 @@ on:
 
 jobs:
   build-kernel:
-    name: Compilación Kernel 4.19 (pine)
+    name: Compilación con Clang (KSU + F2FS)
     runs-on: ubuntu-22.04
 
     steps:
       - name: Descargar Código Fuente
         uses: actions/checkout@v4
 
-      - name: Instalar Dependencias
+      - name: Instalar Dependencias del Sistema
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
-            gcc-aarch64-linux-gnu \
-            gcc-arm-linux-gnueabi \
             bc \
             bison \
             flex \
             libssl-dev \
             libncurses5-dev \
-            libncursesw5-dev \
             libelf-dev \
             git \
             zip \
             unzip \
             curl \
             python3 \
-            cpio
+            cpio \
+            lld \
+            llvm
 
-      - name: Parchear Ganchos Huérfanos de KernelSU
+      - name: Descargar Toolchains de Clang y GCC de AOSP
         run: |
-          # 1. Purgar carpetas externas de KernelSU y F2FS incompatible
-          rm -rf drivers/kernelsu fs/f2fs
-          if [ -f "drivers/Kconfig" ]; then
-            sed -i '/kernelsu/d' drivers/Kconfig || true
-          fi
-          if [ -f "fs/Kconfig" ]; then
-            sed -i '/f2fs/I d' fs/Kconfig || true
-          fi
+          mkdir -p toolchain
+          # Clonar Clang 12 (estable para kernels 4.19)
+          git clone --depth=1 https://gitlab.com/ThankYouMario/android_toolchains.git -b clang-12 toolchain/clang
+          # Clonar cross-compilers de AOSP necesarios para arm64 y arm32
+          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git toolchain/aarch64
+          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9.git toolchain/arm32
 
-          # 2. Inyectar correcciones mediante Python incluyendo import os
-          python3 -c '
-          import os
+      - name: Configurar Rutas del Toolchain
+        run: |
+          echo "$PWD/toolchain/clang/bin" >> $GITHUB_PATH
+          echo "$PWD/toolchain/aarch64/bin" >> $GITHUB_PATH
+          echo "$PWD/toolchain/arm32/bin" >> $GITHUB_PATH
 
-          # Parchear cpuset.c para struct cs_target
-          cpuset_path = "kernel/cgroup/cpuset.c"
-          if os.path.exists(cpuset_path):
-              with open(cpuset_path, "r") as f:
-                  code = f.read()
-              if "struct cs_target;" not in code:
-                  code = "struct cs_target;\n" + code
-              with open(cpuset_path, "w") as f:
-                  f.write(code)
-
-          # Parchear task_mmu.c para reclaim_walk_ops
-          mmu_path = "fs/proc/task_mmu.c"
-          if os.path.exists(mmu_path):
-              with open(mmu_path, "r") as f:
-                  code = f.read()
-              stub = "static struct { void *pmd_entry; } reclaim_walk_ops = {0};\n"
-              if "reclaim_walk_ops" in code and "static struct" not in code:
-                  code = code.replace("int reclaim_write(", "int reclaim_write(\n" + stub)
-              with open(mmu_path, "w") as f:
-                  f.write(code)
-          '
-
-      - name: Compilar Kernel con GCC
+      - name: Compilar Kernel con Clang (KSU y F2FS Intactos)
         run: |
           mkdir -p out
           
@@ -87,12 +64,21 @@ jobs:
             cp "$CONFIG_PATH" arch/arm64/configs/
           fi
           
-          make O=out ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- "$CONFIG_NAME"
+          # Configurar con Clang
+          make O=out ARCH=arm64 \
+            CC=clang \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-android- \
+            CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+            "$CONFIG_NAME"
           
+          # Compilar en paralelo usando Clang
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
-            CROSS_COMPILE=aarch64-linux-gnu- \
-            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+            CC=clang \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-android- \
+            CROSS_COMPILE_ARM32=arm-linux-androideabi- \
             KCFLAGS="-w"
 
       - name: Empaquetar con AnyKernel3
@@ -113,10 +99,10 @@ jobs:
           sed -i 's/device.name1=.*/device.name1=pine/' anykernel.sh
           sed -i 's/device.name2=.*/device.name2=redmi7a/' anykernel.sh
           sed -i 's/block=.*/block=auto;/' anykernel.sh
-          zip -r9 ../LolzKernel-Stock-Pine.zip * -x .git README.md *placeholder
+          zip -r9 ../LolzKernel-Clang-Final.zip * -x .git README.md *placeholder
 
       - name: Subir ZIP Resultante
         uses: actions/upload-artifact@v4
         with:
-          name: LolzKernel-Stock-Pine
-          path: LolzKernel-Stock-Pine.zip
+          name: LolzKernel-Clang-Final
+          path: LolzKernel-Clang-Final.zip
