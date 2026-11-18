@@ -1,4 +1,4 @@
-name: Compilar Kernel 4.19 con Parches Corregidos (pine)
+name: Compilar Kernel 4.19 con Parche F2FS (pine)
 
 on:
   push:
@@ -34,7 +34,7 @@ jobs:
             python3 \
             cpio
 
-      - name: Limpiar KernelSU y Parchear Incompatibilidades 4.19
+      - name: Limpiar y Parchear Incompatibilidades
         run: |
           # 1. Purgar rastros de KernelSU
           rm -rf drivers/kernelsu
@@ -48,10 +48,9 @@ jobs:
             sed -i '/#include <linux\/cgroup.h>/a struct cs_target;' kernel/cgroup/cpuset.c || true
           fi
 
-          # 3. Solucionar incompatibilidad de argumentos en fs/f2fs/segment.c adaptándolo al kernel 4.19
-          if [ -f "fs/f2fs/segment.c" ]; then
-            sed -i 's/struct bio \*bio = bio_alloc(bdev, 0, REQ_OP_ZONE_RESET | flag, GFP_NOFS);/struct bio *bio = bio_alloc(GFP_NOFS, 0);/' fs/f2fs/segment.c || true
-            sed -i 's/f2fs_update_iostat(sbi, NULL, FS_ZONE_RESET_IO, dc->di.len \* F2FS_BLKSIZE);/\/\/ f2fs_update_iostat disabled/' fs/f2fs/segment.c || true
+          # 3. Definir blk_opf_t globalmente en un header de fs/f2fs para evitar el error de tipos
+          if [ -f "fs/f2fs/f2fs.h" ]; then
+            sed -i '/#endif/i typedef unsigned int blk_opf_t;' fs/f2fs/f2fs.h || true
           fi
 
       - name: Compilar Kernel con GCC
@@ -96,10 +95,10 @@ jobs:
           sed -i 's/device.name1=.*/device.name1=pine/' anykernel.sh
           sed -i 's/device.name2=.*/device.name2=redmi7a/' anykernel.sh
           sed -i 's/block=.*/block=auto;/' anykernel.sh
-          zip -r9 ../LolzKernel-Clean-Pine.zip * -x .git README.md *placeholder
+          zip -r9 ../LolzKernel-Pine.zip * -x .git README.md *placeholder
 
       - name: Subir ZIP Resultante
         uses: actions/upload-artifact@v4
         with:
-          name: LolzKernel-Clean-Pine
-          path: LolzKernel-Clean-Pine.zip
+          name: LolzKernel-Pine
+          path: LolzKernel-Pine.zip
